@@ -1,4 +1,4 @@
-setwd("C:/Users/richarej/tcga//app versions/tcga_app_1_07.08.23")
+setwd("C:/Users/richarej/tcga//app versions/tcga_app_2_07.08.23")
 
 ## Loading libraries ##
 if (!require("ggcorrplot", quietly = TRUE)) { install.packages("ggcorrplot") } 
@@ -32,7 +32,6 @@ source("PCA_function.R")
 
 list_of_cancer_types <- c("Acute Myeloid Leukemia" = "TCGA-LAML",                                                                                
                           "Adrenocortical Carcinoma" = "TCGA-ACC",                                                                              
-                          "Bladder Urothelial Carcinoma" = "TCGA-BLCA",                                                                          
                           "Brain Lower Grade Glioma" = "TCGA-LGG",                                                                              
                           "Breast Invasive Carcinoma" = "TCGA-BRCA",                                                                             
                           "Cervical Squamous Cell Carcinoma and Endocervical Adenocarcinoma" = "TCGA-CESC",                                      
@@ -42,15 +41,11 @@ list_of_cancer_types <- c("Acute Myeloid Leukemia" = "TCGA-LAML",
                           "Glioblastoma Multiforme" = "TCGA-GBM",                                                                               
                           "Head and Neck Squamous Cell Carcinoma" = "TCGA-HNSC",                                                
                           "Kidney Chromophobe" = "TCGA-KICH",                                                                                    
-                          "Kidney Renal Clear Cell Carcinoma" = "TCGA-KIRC",                                                                     
-                          "Kidney Renal Papillary Cell Carcinoma" = "TCGA-KIRP",                                                                 
                           "Liver Hepatocellular Carcinoma" = "TCGA-LIHC",      
                           "Lung Adenocarcinoma" = "TCGA-LUAD",                                                                                   
                           "Lung Squamous Cell Carcinoma" = "TCGA-LUSC",                                                                          
                           "Lymphoid Neoplasm Diffuse Large B-cell Lymphoma" = "TCGA-DLBC",                                                      
-                          "Mesothelioma" = "TCGA-MESO",                                                                                         
                           "Ovarian Serous Cystadenocarcinoma" = "TCGA-OV",                                                                     
-                          "Pancreatic Adenocarcinoma" = "TCGA-PAAD",                                                                             
                           "Pheochromocytoma and Paraganglioma" = "TCGA-PCPG",                                                                    
                           "Prostate Adenocarcinoma" = "TCGA-PRAD",                                                                               
                           "Rectum Adenocarcinoma" = "TCGA-READ",                                                                                 
@@ -61,9 +56,7 @@ list_of_cancer_types <- c("Acute Myeloid Leukemia" = "TCGA-LAML",
                           "Thymoma" = "TCGA-THYM",                                                                                               
                           "Thyroid Carcinoma" = "TCGA-THCA",                                                                                     
                           "Uterine Carcinosarcoma" = "TCGA-UCS",                                                                                
-                          "Uterine Corpus Endometrial Carcinoma" = "TCGA-UCEC",                                                                  
                           "Uveal Melanoma" = "TCGA-UVM")
-
 
 # UI----------------------------------------------------------------------------
 ui <- fluidPage(
@@ -72,11 +65,14 @@ ui <- fluidPage(
   
   sidebarLayout(
     sidebarPanel(
-      radioButtons("cancer_type_list", "Select Cancer Type", list_of_cancer_types),
+      checkboxGroupInput("cancer_type_list", "Select Cancer Type", list_of_cancer_types),
+      br(), 
       
-      textAreaInput("gene_string", "Input your gene names (separated by new lines)", rows = 5), 
+      print(HTML("<strong>Input gene names</strong> <br/> use Ensembl format and separate by new lines")), 
+      textAreaInput("gene_string", "", rows = 5), 
       
-      actionButton("button_display_plot", "Generate PCA Plots")
+      actionButton("button_pca_analysis", "Generate PCA Plots"), 
+      
     ), # Sidebar panel
     
     mainPanel(
@@ -90,15 +86,45 @@ ui <- fluidPage(
 # Server------------------------------------------------------------------------
 server <- function(input, output) {
   
-  observeEvent(input$button_display_plot, {
+  observeEvent(input$button_pca_analysis, {
+    
     out_plots <- pca_function(input$cancer_type_list, input$gene_string)
-    first_cancer_type <- input$cancer_type_list
+    
+    # Display plot (interactive)-----
+    # Setting default variables
+    first_cancer_type <- input$cancer_type_list[[1]]
     first_gene <-  strsplit(input$gene_string, split = "\n")[[1]][1]
     pcx <- 1
     pcy <- 2
     
+    # Plot
     output$display_plot <- renderPlotly({
       out_plots[[first_cancer_type]][[first_gene]][[paste0(pcx, "_", pcy)]]
+      
+      #--------------------------------------------------------------------------------------------------------------------------------------
+      #      
+      #    # Download display plot
+      #      output$download_display = downloadHandler(
+      #        filename = function() {"plots.pdf"},
+      #        content = function(file) {
+      #          pdf(file, onefile = TRUE, width = 15, height = 9)
+      #          replayPlot(out_plots[[first_cancer_type]][[first_gene]][[paste0(pcx, "_", pcy)]])
+      #          dev.off()
+      #        } # Function
+      #      ) # Download handler
+      #      
+      #    # Download all plots-----
+      #    output$download_all = downloadHandler(
+      #      filename = function() {"plots.pdf"},
+      #      content = function(file) {
+      #        pdf(file, onefile = TRUE, width = 15, height = 9)
+      #        replayPlot(out_plots[[first_cancer_type]][[first_gene]][[paste0(pcx, "_", pcy)]])
+      #        dev.off()
+      #      } # Function
+      #    ) # Download handler
+      #      
+      #--------------------------------------------------------------------------------------------------------------------------------------
+      
     }) # Render Plotly
   }) # Observe event
   

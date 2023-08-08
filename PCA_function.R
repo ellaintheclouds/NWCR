@@ -1,5 +1,7 @@
 #0 Set up-----------------------------------------------------------------------
 
+setwd("C:/Users/richarej/tcga//app versions/tcga_app_2_07.08.23")
+
 ## Loading libraries ##
 if (!require("ggcorrplot", quietly = TRUE)) { install.packages("ggcorrplot") } 
 if (!require("factoextra", quietly = TRUE)) { install.packages("factoextra") } 
@@ -158,10 +160,10 @@ pca_function <- function(cancer_type_list, gene_string){
               
               out_plots[[current_cancer_type]][[current_gene]][[paste0(pcx, "_", pcy)]] <- pca_plot
               
-              dir.create(file.path(paste0("out/pca/", current_cancer_type)), showWarnings = FALSE)
-              dir.create(file.path(paste0("out/pca/", current_cancer_type, "/", current_gene)), showWarnings = FALSE)
+              #dir.create(file.path(paste0("out/pca/", current_cancer_type)), showWarnings = FALSE)
+              #dir.create(file.path(paste0("out/pca/", current_cancer_type, "/", current_gene)), showWarnings = FALSE)
               
-              ggsave(paste0("out/pca/", current_cancer_type, "/", current_gene, "/PC", pcx, "_PC", pcy, ".png"), pca_plot, height = 12, width = 16, units = "cm")              
+              #ggsave(paste0("out/pca/", current_cancer_type, "/", current_gene, "/PC", pcx, "_PC", pcy, ".png"), pca_plot, height = 12, width = 16, units = "cm")              
             } # Plotting PCs when pcx < pcy
           } # pcy
         } # pcx
@@ -172,4 +174,4 @@ pca_function <- function(cancer_type_list, gene_string){
   
 } # Function
 
-#pca_function("TCGA-LAML", "ENSG00000000003.15")
+#pca_function(c("TCGA-LAML", "TCGA-ACC"), "ENSG00000000003.15")
