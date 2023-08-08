@@ -1,6 +1,6 @@
 #0 Set up-----------------------------------------------------------------------
 
-setwd("C:/Users/richarej/tcga//app versions/tcga_app_2_07.08.23")
+setwd("D:/app versions/tcga_app_usb")
 
 ## Loading libraries ##
 if (!require("ggcorrplot", quietly = TRUE)) { install.packages("ggcorrplot") } 

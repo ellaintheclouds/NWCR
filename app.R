@@ -1,6 +1,15 @@
-setwd("C:/Users/richarej/tcga//app versions/tcga_app_2_07.08.23")
+# Set up------------------------------------------------------------------------
+setwd("D:/app versions/tcga_app_usb")
 
 ## Loading libraries ##
+if (!require("BiocManager", quietly = TRUE))
+  install.packages("BiocManager")
+BiocManager::install("TCGAbiolinks")
+
+if (!require("BiocManager", quietly = TRUE))
+  install.packages("BiocManager")
+BiocManager::install("edgeR")
+
 if (!require("ggcorrplot", quietly = TRUE)) { install.packages("ggcorrplot") } 
 if (!require("factoextra", quietly = TRUE)) { install.packages("factoextra") } 
 if (!require("ggfortify", quietly = TRUE)) { install.packages("ggfortify") } 
@@ -71,11 +80,16 @@ ui <- fluidPage(
       print(HTML("<strong>Input gene names</strong> <br/> use Ensembl format and separate by new lines")), 
       textAreaInput("gene_string", "", rows = 5), 
       
-      actionButton("button_pca_analysis", "Generate PCA Plots"), 
+      actionButton("button_pca_analysis", "Principal Component Analysis"), 
       
     ), # Sidebar panel
     
     mainPanel(
+      uiOutput("cancer_type_menu"), 
+      uiOutput("gene_menu"), 
+      uiOutput("pcx_menu"), 
+      uiOutput("pcy_menu"), 
+      
       plotlyOutput("display_plot", width = "100%",
                    height = "1000px")
     ) # Main panel
@@ -93,9 +107,28 @@ server <- function(input, output) {
     # Display plot (interactive)-----
     # Setting default variables
     first_cancer_type <- input$cancer_type_list[[1]]
-    first_gene <-  strsplit(input$gene_string, split = "\n")[[1]][1]
+    
+    gene_list <- strsplit(input$gene_string, split = "\n")[[1]] # Split the user input into a list
+    first_gene <-  gene_list[1]
     pcx <- 1
     pcy <- 2
+    
+    # UI variable menus
+    output$cancer_type_menu <- renderUI({
+      selectInput("display_cancer_type", "Cancer type", input$cancer_type_list)
+    })
+    
+    output$gene_menu <- renderUI({
+      selectInput("display_gene", "Gene", gene_list)
+    })
+    
+    output$pcx_menu <- renderUI({
+      selectInput("display_pcx", "PC (x-axis)", c(1:10))
+    })
+    
+    output$pcy_menu <- renderUI({
+      selectInput("display_pcy", "PC (y-axis)", c(1:10))
+    })
     
     # Plot
     output$display_plot <- renderPlotly({
