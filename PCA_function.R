@@ -161,7 +161,7 @@ pca_function <- function(cancer_type_list, gene_string){
         } # pcx
     } # Gene
    } # Cancer type
-  
+out_plots
   return(out_plots)
   
 } # Function

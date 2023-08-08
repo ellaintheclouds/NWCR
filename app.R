@@ -92,7 +92,9 @@ ui <- fluidPage(
       uiOutput("replot"), 
       
       plotlyOutput("display_plot", width = "100%",
-                   height = "1000px")
+                   height = "1000px"), 
+      
+      uiOutput("download_button_object") #------------------------------------------------------------------------
     ) # Main panel
   ) # Sidebar layout
 ) # Fluid page
@@ -132,8 +134,19 @@ server <- function(input, output) {
     # Plot
     output$display_plot <- renderPlotly({
       out_plots[[input$display_cancer_type]][[input$display_gene]][[paste0(input$display_pcx, "_", input$display_pcy)]]
-      
     }) # Render Plotly
+    
+    # Download all plots-------------------------------------------------------------------------------------------
+    output$download_button_object <- renderUI(downloadButton("download_button", "Download All PCA Plots"))
+  
+    output$download_button = downloadHandler(
+      filename = function() {"plots.pdf"}, 
+      content = function(file) {
+        pdf(file, onefile = TRUE, width = 15, height = 10)
+        for(plot_printout in out_plots){ print(plot_printout)}
+        dev.off()
+        })                      
+    
   }) # Observe event
 } # Server
 
