@@ -89,6 +89,7 @@ ui <- fluidPage(
       uiOutput("gene_menu"), 
       uiOutput("pcx_menu"), 
       uiOutput("pcy_menu"), 
+      uiOutput("replot"), 
       
       plotlyOutput("display_plot", width = "100%",
                    height = "1000px")
@@ -105,34 +106,40 @@ server <- function(input, output) {
     out_plots <- pca_function(input$cancer_type_list, input$gene_string)
     
     # Display plot (interactive)-----
-    # Setting default variables
-    first_cancer_type <- input$cancer_type_list[[1]]
+    # Defaults
+    first_cancer_type <-input$cancer_type_list[1]
+    gene_list <- strsplit(input$gene_string, split = "\n")[[1]]
+    first_gene <- gene_list[1]
     
-    gene_list <- strsplit(input$gene_string, split = "\n")[[1]] # Split the user input into a list
-    first_gene <-  gene_list[1]
-    pcx <- 1
-    pcy <- 2
+    initial_cancer_type <- first_cancer_type
+    initial_gene <- first_gene
+    initial_pcx <- 1
+    initial_pcy <- 2
     
-    # UI variable menus
+    # UI variable menus (with the first variable as default
     output$cancer_type_menu <- renderUI({
-      selectInput("display_cancer_type", "Cancer type", input$cancer_type_list)
+      selectInput("display_cancer_type", "Cancer type", input$cancer_type_list, selected = initial_cancer_type)
     })
     
     output$gene_menu <- renderUI({
-      selectInput("display_gene", "Gene", gene_list)
+      selectInput("display_gene", "Gene", gene_list, selected = initial_gene)
     })
     
     output$pcx_menu <- renderUI({
-      selectInput("display_pcx", "PC (x-axis)", c(1:10))
+      selectInput("display_pcx", "PC (x-axis)", c(1:10), selected = initial_pcx)
     })
     
     output$pcy_menu <- renderUI({
-      selectInput("display_pcy", "PC (y-axis)", c(1:10))
+      selectInput("display_pcy", "PC (y-axis)", c(1:10), selected = initial_pcy)
+    })
+   
+    output$replot <- renderUI({
+      actionButton("replot_button", "Re-Draw Plot") 
     })
     
     # Plot
     output$display_plot <- renderPlotly({
-      out_plots[[first_cancer_type]][[first_gene]][[paste0(pcx, "_", pcy)]]
+      out_plots[[initial_cancer_type]][[initial_gene]][[paste0(initial_pcx, "_", initial_pcy)]]
       
       #--------------------------------------------------------------------------------------------------------------------------------------
       #      
@@ -159,6 +166,12 @@ server <- function(input, output) {
       #--------------------------------------------------------------------------------------------------------------------------------------
       
     }) # Render Plotly
+  }) # Observe event
+  
+  observeEvent(input$replot_button, {
+    output$display_plot <- renderPlotly({
+      out_plots[[display_cancer_type]][[display_gene]][[paste0(display_pcx, "_", display_pcy)]]
+      })
   }) # Observe event
   
 } # Server
