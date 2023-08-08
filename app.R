@@ -116,6 +116,11 @@ server <- function(input, output) {
     initial_pcx <- 1
     initial_pcy <- 2
     
+    #display_cancer_type_data <- first_cancer_type
+    #display_gene_data <- first_gene
+    #display_pcx_data <- 1
+    #display_pcy_data <- 2
+    
     # UI variable menus (with the first variable as default
     output$cancer_type_menu <- renderUI({
       selectInput("display_cancer_type", "Cancer type", input$cancer_type_list, selected = initial_cancer_type)
@@ -126,53 +131,35 @@ server <- function(input, output) {
     })
     
     output$pcx_menu <- renderUI({
-      selectInput("display_pcx", "PC (x-axis)", c(1:10), selected = initial_pcx)
+      selectInput("display_pcx", "PC (x-axis)", c(1:10), selected = 1)
     })
     
     output$pcy_menu <- renderUI({
-      selectInput("display_pcy", "PC (y-axis)", c(1:10), selected = initial_pcy)
+      selectInput("display_pcy", "PC (y-axis)", c(1:10), selected = 2)
     })
    
-    output$replot <- renderUI({
-      actionButton("replot_button", "Re-Draw Plot") 
-    })
+    # Selected data (reactive)
+    display_cancer_type_data <- reactive({input$display_cancer_type})
+    display_gene_data <- reactive({input$display_gene})
+    display_pcx_data <- reactive({input$display_pcx})
+    display_pcy_data <- reactive({input$display_pcy})
+    
+    #output$replot <- renderUI({
+    #  actionButton("replot_button", "Re-Draw Plot") 
+    #})
     
     # Plot
     output$display_plot <- renderPlotly({
-      out_plots[[initial_cancer_type]][[initial_gene]][[paste0(initial_pcx, "_", initial_pcy)]]
-      
-      #--------------------------------------------------------------------------------------------------------------------------------------
-      #      
-      #    # Download display plot
-      #      output$download_display = downloadHandler(
-      #        filename = function() {"plots.pdf"},
-      #        content = function(file) {
-      #          pdf(file, onefile = TRUE, width = 15, height = 9)
-      #          replayPlot(out_plots[[first_cancer_type]][[first_gene]][[paste0(pcx, "_", pcy)]])
-      #          dev.off()
-      #        } # Function
-      #      ) # Download handler
-      #      
-      #    # Download all plots-----
-      #    output$download_all = downloadHandler(
-      #      filename = function() {"plots.pdf"},
-      #      content = function(file) {
-      #        pdf(file, onefile = TRUE, width = 15, height = 9)
-      #        replayPlot(out_plots[[first_cancer_type]][[first_gene]][[paste0(pcx, "_", pcy)]])
-      #        dev.off()
-      #      } # Function
-      #    ) # Download handler
-      #      
-      #--------------------------------------------------------------------------------------------------------------------------------------
+      out_plots[[input$display_cancer_type]][[input$display_gene]][[paste0(input$display_pcx, "_", input$display_pcy)]]
       
     }) # Render Plotly
   }) # Observe event
   
-  observeEvent(input$replot_button, {
-    output$display_plot <- renderPlotly({
-      out_plots[[display_cancer_type]][[display_gene]][[paste0(display_pcx, "_", display_pcy)]]
-      })
-  }) # Observe event
+  #observeEvent(input$replot_button, {
+  #  output$display_plot <- renderPlotly({
+  #    out_plots[[display_cancer_type]][[display_gene]][[paste0(display_pcx, "_", display_pcy)]]
+  #    })
+  #}) # Observe event
   
 } # Server
 

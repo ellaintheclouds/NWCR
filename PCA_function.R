@@ -113,8 +113,8 @@ pca_function <- function(cancer_type_list, gene_string){
         
         
       #7 Start plot function for every possible combination of dimensions-------------
-        for(pcx in 1:1){
-          for(pcy in 1:2){
+        for(pcx in 1:10){
+          for(pcy in 1:10){
             
             
       #8 Plotting PCA-----------------------------------------------------------------
