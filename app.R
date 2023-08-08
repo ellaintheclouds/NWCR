@@ -106,28 +106,13 @@ server <- function(input, output) {
     out_plots <- pca_function(input$cancer_type_list, input$gene_string)
     
     # Display plot (interactive)-----
-    # Defaults
-    first_cancer_type <-input$cancer_type_list[1]
-    gene_list <- strsplit(input$gene_string, split = "\n")[[1]]
-    first_gene <- gene_list[1]
-    
-    initial_cancer_type <- first_cancer_type
-    initial_gene <- first_gene
-    initial_pcx <- 1
-    initial_pcy <- 2
-    
-    #display_cancer_type_data <- first_cancer_type
-    #display_gene_data <- first_gene
-    #display_pcx_data <- 1
-    #display_pcy_data <- 2
-    
     # UI variable menus (with the first variable as default
     output$cancer_type_menu <- renderUI({
-      selectInput("display_cancer_type", "Cancer type", input$cancer_type_list, selected = initial_cancer_type)
+      selectInput("display_cancer_type", "Cancer type", input$cancer_type_list, selected = input$cancer_type_list[1])
     })
     
     output$gene_menu <- renderUI({
-      selectInput("display_gene", "Gene", gene_list, selected = initial_gene)
+      selectInput("display_gene", "Gene", strsplit(input$gene_string, split = "\n")[[1]], selected = strsplit(input$gene_string, split = "\n")[[1]][1])
     })
     
     output$pcx_menu <- renderUI({
@@ -144,29 +129,16 @@ server <- function(input, output) {
     display_pcx_data <- reactive({input$display_pcx})
     display_pcy_data <- reactive({input$display_pcy})
     
-    #output$replot <- renderUI({
-    #  actionButton("replot_button", "Re-Draw Plot") 
-    #})
-    
     # Plot
     output$display_plot <- renderPlotly({
       out_plots[[input$display_cancer_type]][[input$display_gene]][[paste0(input$display_pcx, "_", input$display_pcy)]]
       
     }) # Render Plotly
   }) # Observe event
-  
-  #observeEvent(input$replot_button, {
-  #  output$display_plot <- renderPlotly({
-  #    out_plots[[display_cancer_type]][[display_gene]][[paste0(display_pcx, "_", display_pcy)]]
-  #    })
-  #}) # Observe event
-  
 } # Server
 
 
 # Run---------------------------------------------------------------------------
 shinyApp(ui = ui, server = server)
 
-#Test genes
-#ENSG00000000003.15
-#ENSG00000000005.6
+#Test genes ENSG00000000003.15ENSG00000000005.6

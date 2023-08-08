@@ -1,5 +1,4 @@
 #0 Set up-----------------------------------------------------------------------
-
 setwd("D:/app versions/tcga_app_usb")
 
 ## Loading libraries ##
@@ -63,15 +62,11 @@ pca_function <- function(cancer_type_list, gene_string){
     
     
     #4 PCA------------------------------------------------------------------------
-    #gene_annotation <- read.csv("/Count and annotation data/gene_annotation.csv") # CHANGE to add gene annotations
-    #count_data <- read.csv("/Count and annotation data/count_data.csv", row.names=1) # CHANGE to create count matrix
-    #count_data <- data.matrix(count_data) # converted to a matrix as these are good for calculations
     count_pca <- prcomp(t(lcpm_filtered), scale=TRUE) # Carry out PCA on transformed matrix of count data.
     fviz_eig(count_pca, addlabels = TRUE) # Visualise the eiganvalues.
     
     
     #5 Reorganise PCA output for plotting-----------------------------------------
-    
     # Reorganise to calculate the strength of contribution.
     gene_contribution <- as.data.frame(count_pca$rotation)# (number of PC equal to number of variables in the input)
     
@@ -108,7 +103,6 @@ pca_function <- function(cancer_type_list, gene_string){
       sample_annotation_tpm$Row.names <- NULL
     
       # Gene relationships
-      # pca_plot_df <- as.data.frame(merge(gene_annotation, as.data.frame(count_pca$x), by.x= 0, by.y= 0))
       pca_plot_df <- as.data.frame(merge(sample_annotation_tpm, as.data.frame(count_pca$x), by.x= 0, by.y= 0))
         
         
@@ -150,8 +144,6 @@ pca_function <- function(cancer_type_list, gene_string){
               # Plot
               pca_plot <- ggplot(data = current_pca_plot_df, aes(x = pcx, y = pcy)) + 
                 geom_point(aes(colour = tpm)) +
-                #scale_x_continuous(limits = c(-160, 100), breaks = c(-200, -150, -100, -50, 0, 50, 100)) +
-                #scale_y_continuous(limits = c(-40, 40), breaks = c(-40, -30, -20, -10, 0, 10, 20, 30, 40)) + 
                 labs(colour = paste0(current_gene, tpm_label)) + 
                 theme_bw() + 
                 xlab(paste0("PC", pcx, " (", pca_summary[pcx], ")")) + 
@@ -173,5 +165,3 @@ pca_function <- function(cancer_type_list, gene_string){
   return(out_plots)
   
 } # Function
-
-#pca_function(c("TCGA-LAML", "TCGA-ACC"), "ENSG00000000003.15")
