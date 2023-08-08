@@ -31,7 +31,7 @@ pca_function <- function(cancer_type_list, gene_string){
   gene_list <- strsplit(gene_string, split = "\n")[[1]] # Split the user input into a list
 
   # storing all plots
-  #out_plots <- list()
+  out_plots <- list()
   
 #2 Formatting and looping through cancer type data------------------------------
    for(current_cancer_type in cancer_type_list){
@@ -39,7 +39,7 @@ pca_function <- function(cancer_type_list, gene_string){
     current_file_name <- paste0(current_cancer_type, ".rds")
     print(current_file_name) # Prints the names of the files that are being accessed in the loop
     
-    #out_plots[[current_cancer_type]] <- list()
+    out_plots[[current_cancer_type]] <- list()
     
     #data_RNAseq <- readRDS(current_file_name) # Reads in the file to be used in this iteration of the loop
     data_RNAseq <- readRDS(paste0("data/", current_file_name))  
@@ -93,7 +93,8 @@ pca_function <- function(cancer_type_list, gene_string){
 
     #6 Formatting and looping through gene data-------------------------------------
     for(current_gene in gene_list){
-      #out_plots[[current_cancer_type]][[current_gene]] <- list()
+      
+      out_plots[[current_cancer_type]][[current_gene]] <- list()
       
       tpm_dataframe <- as.data.frame(t(tpm_matrix))
       tpm_dataframe$sample_id_tpm <- rownames(tpm_dataframe)
@@ -110,8 +111,8 @@ pca_function <- function(cancer_type_list, gene_string){
         
         
       #7 Start plot function for every possible combination of dimensions-------------
-        for(pcx in 1:10){
-          for(pcy in 1:10){
+        for(pcx in 1:1){
+          for(pcy in 1:2){
             
             
       #8 Plotting PCA-----------------------------------------------------------------
@@ -142,7 +143,6 @@ pca_function <- function(cancer_type_list, gene_string){
               colnames(current_pca_plot_df) <- c("sample_submitter_id", "tpm", "pcx", "pcy")
               
               # Labels for the axis
-              current_gene_name <- names(current_gene)
               tpm_label <- "\n Expression \n (TPM)"
               
               # Plot
@@ -150,13 +150,13 @@ pca_function <- function(cancer_type_list, gene_string){
                 geom_point(aes(colour = tpm)) +
                 #scale_x_continuous(limits = c(-160, 100), breaks = c(-200, -150, -100, -50, 0, 50, 100)) +
                 #scale_y_continuous(limits = c(-40, 40), breaks = c(-40, -30, -20, -10, 0, 10, 20, 30, 40)) + 
-                labs(colour = paste0(current_gene_name, tpm_label)) + 
+                labs(colour = paste0(current_gene, tpm_label)) + 
                 theme_bw() + 
                 xlab(paste0("PC", pcx, " (", pca_summary[pcx], ")")) + 
                 ylab(paste0("PC", pcy, " (", pca_summary[pcy], ")")) + 
                 scale_colour_viridis()
               
-              #out_plots[[current_cancer_type]][[current_gene]][[paste0(pcx, "_", pcy)]] <- pca_plot
+              out_plots[[current_cancer_type]][[current_gene]][[paste0(pcx, "_", pcy)]] <- pca_plot
               
               dir.create(file.path(paste0("out/pca/", current_cancer_type)), showWarnings = FALSE)
               dir.create(file.path(paste0("out/pca/", current_cancer_type, "/", current_gene)), showWarnings = FALSE)
@@ -168,6 +168,8 @@ pca_function <- function(cancer_type_list, gene_string){
     } # Gene
    } # Cancer type
   
-  return(pca_plot)
+  return(out_plots)
   
 } # Function
+
+#pca_function("TCGA-LAML", "ENSG00000000003.15")

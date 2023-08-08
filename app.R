@@ -1,4 +1,4 @@
-setwd("C:/Users/richarej/tcga/tcga_app_07.08.23")
+setwd("C:/Users/richarej/tcga//app versions/tcga_app_1_07.08.23")
 
 ## Loading libraries ##
 if (!require("ggcorrplot", quietly = TRUE)) { install.packages("ggcorrplot") } 
@@ -30,39 +30,39 @@ library(umap) # Algorithm for dimensional reduction
 ## Data ##
 source("PCA_function.R")
 
-list_of_cancer_types <- c("Breast Invasive Carcinoma" = "TCGA-BRCA",                                                                             
-                          "Thyroid Carcinoma" = "TCGA-THCA",                                                                                     
-                          "Uterine Corpus Endometrial Carcinoma" = "TCGA-UCEC",                                                                  
-                          "Lymphoid Neoplasm Diffuse Large B-cell Lymphoma" = "TCGA-DLBC",                                                      
-                          "Colon Adenocarcinoma" = "TCGA-COAD",                                                                                  
-                          "Cervical Squamous Cell Carcinoma and Endocervical Adenocarcinoma" = "TCGA-CESC",                                      
-                          "Bladder Urothelial Carcinoma" = "TCGA-BLCA",                                                                          
-                          "Cholangiocarcinoma" = "TCGA-CHOL",                                                                                    
-                          "Esophageal Carcinoma" = "TCGA-ESCA",                                                                                  
+list_of_cancer_types <- c("Acute Myeloid Leukemia" = "TCGA-LAML",                                                                                
                           "Adrenocortical Carcinoma" = "TCGA-ACC",                                                                              
-                          "Kidney Chromophobe" = "TCGA-KICH",                                                                                    
-                          "Head and Neck Squamous Cell Carcinoma" = "TCGA-HNSC",                                                
-                          "Liver Hepatocellular Carcinoma" = "TCGA-LIHC",      
-                          "Mesothelioma" = "TCGA-MESO",                                                                                         
-                          "Acute Myeloid Leukemia" = "TCGA-LAML",                                                                                
-                          "Kidney Renal Papillary Cell Carcinoma" = "TCGA-KIRP",                                                                 
-                          "Kidney Renal Clear Cell Carcinoma" = "TCGA-KIRC",                                                                     
-                          "Glioblastoma Multiforme" = "TCGA-GBM",                                                                               
+                          "Bladder Urothelial Carcinoma" = "TCGA-BLCA",                                                                          
                           "Brain Lower Grade Glioma" = "TCGA-LGG",                                                                              
-                          "Sarcoma" = "TCGA-SARC",                                                                                               
-                          "Pheochromocytoma and Paraganglioma" = "TCGA-PCPG",                                                                    
-                          "Rectum Adenocarcinoma" = "TCGA-READ",                                                                                 
-                          "Pancreatic Adenocarcinoma" = "TCGA-PAAD",                                                                             
+                          "Breast Invasive Carcinoma" = "TCGA-BRCA",                                                                             
+                          "Cervical Squamous Cell Carcinoma and Endocervical Adenocarcinoma" = "TCGA-CESC",                                      
+                          "Cholangiocarcinoma" = "TCGA-CHOL",                                                                                    
+                          "Colon Adenocarcinoma" = "TCGA-COAD",                                                                                  
+                          "Esophageal Carcinoma" = "TCGA-ESCA",                                                                                  
+                          "Glioblastoma Multiforme" = "TCGA-GBM",                                                                               
+                          "Head and Neck Squamous Cell Carcinoma" = "TCGA-HNSC",                                                
+                          "Kidney Chromophobe" = "TCGA-KICH",                                                                                    
+                          "Kidney Renal Clear Cell Carcinoma" = "TCGA-KIRC",                                                                     
+                          "Kidney Renal Papillary Cell Carcinoma" = "TCGA-KIRP",                                                                 
+                          "Liver Hepatocellular Carcinoma" = "TCGA-LIHC",      
                           "Lung Adenocarcinoma" = "TCGA-LUAD",                                                                                   
-                          "Prostate Adenocarcinoma" = "TCGA-PRAD",                                                                               
-                          "Ovarian Serous Cystadenocarcinoma" = "TCGA-OV",                                                                     
                           "Lung Squamous Cell Carcinoma" = "TCGA-LUSC",                                                                          
+                          "Lymphoid Neoplasm Diffuse Large B-cell Lymphoma" = "TCGA-DLBC",                                                      
+                          "Mesothelioma" = "TCGA-MESO",                                                                                         
+                          "Ovarian Serous Cystadenocarcinoma" = "TCGA-OV",                                                                     
+                          "Pancreatic Adenocarcinoma" = "TCGA-PAAD",                                                                             
+                          "Pheochromocytoma and Paraganglioma" = "TCGA-PCPG",                                                                    
+                          "Prostate Adenocarcinoma" = "TCGA-PRAD",                                                                               
+                          "Rectum Adenocarcinoma" = "TCGA-READ",                                                                                 
+                          "Sarcoma" = "TCGA-SARC",                                                                                               
+                          "Skin Cutaneous Melanoma" = "TCGA-SKCM",                                                                               
+                          "Stomach Adenocarcinoma" = "TCGA-STAD", 
                           "Testicular Germ Cell Tumors" = "TCGA-TGCT",                                                                           
                           "Thymoma" = "TCGA-THYM",                                                                                               
-                          "Uveal Melanoma" = "TCGA-UVM",                                                                                       
-                          "Skin Cutaneous Melanoma" = "TCGA-SKCM",                                                                               
+                          "Thyroid Carcinoma" = "TCGA-THCA",                                                                                     
                           "Uterine Carcinosarcoma" = "TCGA-UCS",                                                                                
-                          "Stomach Adenocarcinoma" = "TCGA-STAD")
+                          "Uterine Corpus Endometrial Carcinoma" = "TCGA-UCEC",                                                                  
+                          "Uveal Melanoma" = "TCGA-UVM")
 
 
 # UI----------------------------------------------------------------------------
@@ -91,8 +91,14 @@ ui <- fluidPage(
 server <- function(input, output) {
   
   observeEvent(input$button_display_plot, {
+    out_plots <- pca_function(input$cancer_type_list, input$gene_string)
+    first_cancer_type <- input$cancer_type_list
+    first_gene <-  strsplit(input$gene_string, split = "\n")[[1]][1]
+    pcx <- 1
+    pcy <- 2
+    
     output$display_plot <- renderPlotly({
-      pca_function(input$cancer_type_list, input$gene_string)
+      out_plots[[first_cancer_type]][[first_gene]][[paste0(pcx, "_", pcy)]]
     }) # Render Plotly
   }) # Observe event
   
