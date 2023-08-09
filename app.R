@@ -2,13 +2,13 @@
 setwd("D:/app versions/tcga_app_usb")
 
 ## Loading libraries ##
-if (!require("BiocManager", quietly = TRUE))
-  install.packages("BiocManager")
-BiocManager::install("TCGAbiolinks")
+#if (!require("BiocManager", quietly = TRUE))
+#  install.packages("BiocManager")
+#BiocManager::install("TCGAbiolinks")
 
-if (!require("BiocManager", quietly = TRUE))
-  install.packages("BiocManager")
-BiocManager::install("edgeR")
+#if (!require("BiocManager", quietly = TRUE))
+#  install.packages("BiocManager")
+#BiocManager::install("edgeR")
 
 if (!require("ggcorrplot", quietly = TRUE)) { install.packages("ggcorrplot") } 
 if (!require("factoextra", quietly = TRUE)) { install.packages("factoextra") } 
@@ -138,14 +138,39 @@ server <- function(input, output) {
     
     # Download all plots-------------------------------------------------------------------------------------------
     output$download_button_object <- renderUI(downloadButton("download_button", "Download All PCA Plots"))
-  
-    output$download_button = downloadHandler(
+    
+    # .png (.zip)
+    #output$download_button <-downloadHandler(
+    #  filename = function(){paste0("plots", ".zip")}, 
+    #  content = function(file){
+    #    
+    #    # Create empty vector
+    #    plot_pngs <- c()
+    #    
+    #    #Set temporary wd
+    #    temp_dir <- setwd(tempdir())
+    #    on.exit(setwd(temp_dir))
+    #    
+    #    # Save the plots as pngs
+    #    for(plot in out_plots){
+    #      plot_png <- ggsave(paste0(plot, ".png"), plot = plot, device = "png")
+    #      plot_pngs <- c(plot_pngs, plot_png) # Add to vector
+    #      return(plot_pngs)
+    #    } # For loop
+    #    
+    #    zip(zipfile = file, files = plot_pngs)
+    #   },  # Function
+    #  contentType = "application/zip"
+    #  ) # Download handler
+    
+    # .pdf
+    output$download_button <- downloadHandler(
       filename = function() {"plots.pdf"}, 
       content = function(file) {
         pdf(file, onefile = TRUE, width = 15, height = 10)
-        for(plot_printout in out_plots){ print(plot_printout)}
+        for(plot in out_plots){ print(plot)}
         dev.off()
-        })                      
+        }) # Download handler                      
     
   }) # Observe event
 } # Server
