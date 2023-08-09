@@ -70,7 +70,7 @@ pca_function <- function(cancer_type_list, gene_string){
   out_plots <- list()
   
 #2 Formatting and looping through cancer type data------------------------------
-   for(current_cancer_type in current_cancer_type){
+   for(current_cancer_type in cancer_type_list){
     
      # Re-assigning names to cancer types
      current_cancer_type_named <- current_cancer_type 
@@ -208,5 +208,3 @@ pca_function <- function(cancer_type_list, gene_string){
   return(out_plots)
   
 } # Function
-
-pca_function("TCGA-LAML", "ENSG00000000005.6")
