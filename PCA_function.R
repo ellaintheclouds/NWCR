@@ -26,17 +26,56 @@ library(factoextra) # For principal component analysis
 library(ggfortify) # Allows plotting of PCA and survival analysis.
 library(umap) # Algorithm for dimensional reduction
 
+list_of_cancer_types <- c("Acute Myeloid Leukemia" = "TCGA-LAML",                                                                                
+                          "Adrenocortical Carcinoma" = "TCGA-ACC",                                                                              
+                          "Brain Lower Grade Glioma" = "TCGA-LGG",                                                                              
+                          "Breast Invasive Carcinoma" = "TCGA-BRCA",                                                                             
+                          "Cervical Squamous Cell Carcinoma and Endocervical Adenocarcinoma" = "TCGA-CESC",                                      
+                          "Cholangiocarcinoma" = "TCGA-CHOL",                                                                                    
+                          "Colon Adenocarcinoma" = "TCGA-COAD",                                                                                  
+                          "Esophageal Carcinoma" = "TCGA-ESCA",                                                                                  
+                          "Glioblastoma Multiforme" = "TCGA-GBM",                                                                               
+                          "Head and Neck Squamous Cell Carcinoma" = "TCGA-HNSC",                                                
+                          "Kidney Chromophobe" = "TCGA-KICH",                                                                                    
+                          "Liver Hepatocellular Carcinoma" = "TCGA-LIHC",      
+                          "Lung Adenocarcinoma" = "TCGA-LUAD",                                                                                   
+                          "Lung Squamous Cell Carcinoma" = "TCGA-LUSC",                                                                          
+                          "Lymphoid Neoplasm Diffuse Large B-cell Lymphoma" = "TCGA-DLBC",                                                      
+                          "Ovarian Serous Cystadenocarcinoma" = "TCGA-OV",                                                                     
+                          "Pheochromocytoma and Paraganglioma" = "TCGA-PCPG",                                                                    
+                          "Prostate Adenocarcinoma" = "TCGA-PRAD",                                                                               
+                          "Rectum Adenocarcinoma" = "TCGA-READ",                                                                                 
+                          "Sarcoma" = "TCGA-SARC",                                                                                               
+                          "Skin Cutaneous Melanoma" = "TCGA-SKCM",                                                                               
+                          "Stomach Adenocarcinoma" = "TCGA-STAD", 
+                          "Testicular Germ Cell Tumors" = "TCGA-TGCT",                                                                           
+                          "Thymoma" = "TCGA-THYM",                                                                                               
+                          "Thyroid Carcinoma" = "TCGA-THCA",                                                                                     
+                          "Uterine Carcinosarcoma" = "TCGA-UCS",                                                                                
+                          "Uveal Melanoma" = "TCGA-UVM")
+
+list_of_cancer_types_rev <- vector()
+for(current_name in names(list_of_cancer_types)){
+  current_code <- list_of_cancer_types[current_name]
+  list_of_cancer_types_rev[current_code] = current_name
+}
+
+
 
 #1 Start of function------------------------------------------------------------
 pca_function <- function(cancer_type_list, gene_string){
   gene_list <- strsplit(gene_string, split = "\n")[[1]] # Split the user input into a list
-
+  
   # storing all plots
   out_plots <- list()
   
 #2 Formatting and looping through cancer type data------------------------------
-   for(current_cancer_type in cancer_type_list){
+   for(current_cancer_type in current_cancer_type){
     
+     # Re-assigning names to cancer types
+     current_cancer_type_named <- current_cancer_type 
+     names(current_cancer_type) <- list_of_cancer_types_rev[current_cancer_type]
+     
     current_file_name <- paste0(current_cancer_type, ".rds")
     print(current_file_name) # Prints the names of the files that are being accessed in the loop
     
@@ -139,16 +178,20 @@ pca_function <- function(cancer_type_list, gene_string){
               colnames(current_pca_plot_df) <- c("sample_submitter_id", "tpm", "pcx", "pcy")
               
               # Labels for the axis
-              tpm_label <- "\n Expression \n (TPM)"
+              tpm_label <- "Transcripts\n per\n Millon"
+              
+              title_label <- paste0(current_gene, " Expression in ", names(current_cancer_type))
               
               # Plot
               pca_plot <- ggplot(data = current_pca_plot_df, aes(x = pcx, y = pcy)) + 
                 geom_point(aes(colour = tpm)) +
-                labs(colour = paste0(current_gene, tpm_label)) + 
+                labs(title = title_label, colour = tpm_label) + 
                 theme_bw() + 
                 xlab(paste0("PC", pcx, " (", pca_summary[pcx], ")")) + 
                 ylab(paste0("PC", pcy, " (", pca_summary[pcy], ")")) + 
                 scale_colour_viridis()
+              
+              pca_plot
               
               out_plots[[current_cancer_type]][[current_gene]][[paste0(pcx, "_", pcy)]] <- pca_plot
               
@@ -161,7 +204,9 @@ pca_function <- function(cancer_type_list, gene_string){
         } # pcx
     } # Gene
    } # Cancer type
-out_plots
+  
   return(out_plots)
   
 } # Function
+
+pca_function("TCGA-LAML", "ENSG00000000005.6")

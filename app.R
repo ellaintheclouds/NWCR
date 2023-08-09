@@ -68,6 +68,12 @@ list_of_cancer_types <- c("Acute Myeloid Leukemia" = "TCGA-LAML",
                           "Uterine Carcinosarcoma" = "TCGA-UCS",                                                                                
                           "Uveal Melanoma" = "TCGA-UVM")
 
+list_of_cancer_types_rev <- vector()
+for(current_name in names(list_of_cancer_types)){
+  current_code <- list_of_cancer_types[current_name]
+  list_of_cancer_types_rev[current_code] = current_name
+}
+
 # UI----------------------------------------------------------------------------
 ui <- fluidPage(
   
@@ -116,12 +122,17 @@ server <- function(input, output) {
   
   observeEvent(input$button_pca_analysis, {
     
+    # PCA function
     out_plots <- pca_function(input$cancer_type_list, input$gene_string)
+    
+    # Re-assigning names to cancer types
+    input_cancer_type <- input$cancer_type_list 
+    names(input_cancer_type) <- list_of_cancer_types_rev[input_cancer_type]
     
     # Display plot (interactive)-----
     # UI variable menus (with the first variable as default
     output$cancer_type_menu <- renderUI({
-      selectInput("display_cancer_type", "Cancer type", input$cancer_type_list, selected = input$cancer_type_list[1])
+      selectInput("display_cancer_type", "Cancer type", input_cancer_type, selected = input_cancer_type[1])
     })
     
     output$gene_menu <- renderUI({
@@ -170,7 +181,10 @@ server <- function(input, output) {
             for(pca_combination in names(out_plots[[current_cancer_type]][[current_gene]])){
               # save each graph
               out_plot_fp <- paste0("out_download/", current_cancer_type, "/", current_gene, "/", pca_combination, ".png")
-              ggsave(out_plot_fp, out_plots[[current_cancer_type]][[current_gene]][[pca_combination]])
+              ggsave(out_plot_fp,
+                     plot = out_plots[[current_cancer_type]][[current_gene]][[pca_combination]], 
+                     width = 8, height = 6
+                     )
             }
           }        
         }
@@ -188,7 +202,7 @@ server <- function(input, output) {
     output$download_pdf = downloadHandler(
       filename = function() {"plots.pdf"}, 
       content = function(file) {
-        pdf(file, onefile = TRUE, width = 15, height = 10)
+        pdf(file, onefile = TRUE, width = 8, height = 6)
         for(plot_printout in out_plots){ print(plot_printout)}
         dev.off()
       })                      
