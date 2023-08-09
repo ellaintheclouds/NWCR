@@ -144,8 +144,9 @@ server <- function(input, output) {
     
     # Plot
     output$display_plot <- renderPlotly({
-      out_plots[[input$display_cancer_type]][[input$display_gene]][[paste0(input$display_pcx, "_", input$display_pcy)]]
-    }) # Render Plotly
+      validate(need(input$display_cancer_type, input$display_gene, message = FALSE)) # Validate needs
+        out_plots[[input$display_cancer_type]][[input$display_gene]][[paste0(input$display_pcx, "_", input$display_pcy)]]
+      }) # Render Plotly
     
     # Download all plots-------------------------------------------------------------------------------------------
     # Reactive download buttons
