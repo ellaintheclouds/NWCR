@@ -16,12 +16,15 @@ if (!require("ggfortify", quietly = TRUE)) { install.packages("ggfortify") }
 if (!require("umap", quietly = TRUE)) { install.packages("umap") } 
 if (!require("plotly", quietly = TRUE)) { install.packages("plotly") } 
 if (!require("viridis", quietly = TRUE)) { install.packages("viridis") } 
+if (!require("zip", quietly = TRUE)) { install.packages("zip") } 
+
 #devtools::install_github('ropensci/plotly')
 
 # General
 library(shiny)
 library(stringr) # Makes working with strings simpler.
 library(viridis) # Colour scheme.
+library(zip)
 
 # Biological data
 library(TCGAbiolinks) # For integrative analysis of GDC data.
@@ -89,8 +92,7 @@ ui <- fluidPage(
       uiOutput("gene_menu"), 
       uiOutput("pcx_menu"), 
       uiOutput("pcy_menu"), 
-      uiOutput("replot"), 
-      
+
       plotlyOutput("display_plot", width = "100%",
                    height = "1000px"), 
       
@@ -124,7 +126,7 @@ server <- function(input, output) {
     output$pcy_menu <- renderUI({
       selectInput("display_pcy", "PC (y-axis)", c(1:10), selected = 2)
     })
-   
+    
     # Selected data (reactive)
     display_cancer_type_data <- reactive({input$display_cancer_type})
     display_gene_data <- reactive({input$display_gene})
@@ -139,38 +141,47 @@ server <- function(input, output) {
     # Download all plots-------------------------------------------------------------------------------------------
     output$download_button_object <- renderUI(downloadButton("download_button", "Download All PCA Plots"))
     
-    # .png (.zip)
-    #output$download_button <-downloadHandler(
-    #  filename = function(){paste0("plots", ".zip")}, 
-    #  content = function(file){
-    #    
-    #    # Create empty vector
-    #    plot_pngs <- c()
-    #    
-    #    #Set temporary wd
-    #    temp_dir <- setwd(tempdir())
-    #    on.exit(setwd(temp_dir))
-    #    
-    #    # Save the plots as pngs
-    #    for(plot in out_plots){
-    #      plot_png <- ggsave(paste0(plot, ".png"), plot = plot, device = "png")
-    #      plot_pngs <- c(plot_pngs, plot_png) # Add to vector
-    #      return(plot_pngs)
-    #    } # For loop
-    #    
-    #    zip(zipfile = file, files = plot_pngs)
-    #   },  # Function
-    #  contentType = "application/zip"
-    #  ) # Download handler
+    # create zip
+    output$download_button <-downloadHandler(
+      filename = function(){"out.zip"},
+      content = function(file){
+        if(TRUE){
+        # create png folder
+        dir.create("out_download", showWarnings = FALSE)
+        # loop through cancer type
+        for(current_cancer_type in names(out_plots)){
+          dir.create(file.path(paste0("out_download/", current_cancer_type)), showWarnings = FALSE)
+          # loop through genes
+          for(current_gene in names(out_plots[[current_cancer_type]])){
+            dir.create(file.path(paste0("out_download/", current_cancer_type, "/", current_gene)), showWarnings = FALSE)
+            # loop through pca combinations
+            for(pca_combination in names(out_plots[[current_cancer_type]][[current_gene]])){
+              # save each graph
+              out_plot_fp <- paste0("out_download/", current_cancer_type, "/", current_gene, "/", pca_combination, ".png")
+              ggsave(out_plot_fp, out_plots[[current_cancer_type]][[current_gene]][[pca_combination]])
+            }
+          }        
+        }
+        all_files <- list.files("out_download", full.names = TRUE)
+        }
+
+        zip::zip(zipfile = file, files=all_files)
+        #write.csv(data.frame(x=1:3, y=1:3), "test.csv")
+        #zip("out.zip", "test.csv")
+        #file.copy("out.zip", file)
+      }, # Content function
+      
+      contentType = "application/zip"
+      ) # Download handler
     
-    # .pdf
-    output$download_button <- downloadHandler(
-      filename = function() {"plots.pdf"}, 
-      content = function(file) {
-        pdf(file, onefile = TRUE, width = 15, height = 10)
-        for(plot in out_plots){ print(plot)}
-        dev.off()
-        }) # Download handler                      
+    
+    #output$download_button = downloadHandler(
+    #  filename = function() {"plots.pdf"}, 
+    #  content = function(file) {
+    #    pdf(file, onefile = TRUE, width = 15, height = 10)
+    #    for(plot_printout in out_plots){ print(plot_printout)}
+    #    dev.off()
+    #  })                      
     
   }) # Observe event
 } # Server
