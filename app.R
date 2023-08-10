@@ -140,11 +140,24 @@ server <- function(input, output) {
     })
     
     output$pcx_menu <- renderUI({
-      selectInput("display_pcx", "PC (x-axis)", c(1:10), selected = 1)
+      selectInput("display_pcx", "PC (x-axis)", c(1:9), selected = 1)
     })
     
-    output$pcy_menu <- renderUI({
-      selectInput("display_pcy", "PC (y-axis)", c(1:10), selected = 2)
+    # PCy options that are reactive to PCx
+    
+    observeEvent(input$display_pcx, {
+      
+      if (input$display_pcx == 1){pcy_choices <- c(2:10)}
+      else if (input$display_pcx == 2){pcy_choices <- c(3:10)}
+      else if (input$display_pcx == 3){pcy_choices <- c(4:10)}
+      else if (input$display_pcx == 4){pcy_choices <- c(5:10)}
+      else if (input$display_pcx == 5){pcy_choices <- c(6:10)}
+      else if (input$display_pcx == 6){pcy_choices <- c(7:10)}
+      else if (input$display_pcx == 7){pcy_choices <- c(8:10)}
+      else if (input$display_pcx == 8){pcy_choices <- c(9:10)}
+      else if (input$display_pcx == 9){pcy_choices <- 10}
+      
+      output$pcy_menu <- renderUI({selectInput("display_pcy", "PC (y-axis)", pcy_choices, selected = pcy_choices[1])})
     })
     
     # Selected data (reactive)
@@ -191,7 +204,7 @@ server <- function(input, output) {
         all_files <- list.files("out_download", full.names = TRUE)
         }
 
-        zip::zip(zipfile = file, files=all_files)
+        zip::zip(zipfile = file, files = all_files)
       }, # Content function
       
       contentType = "application/zip"
