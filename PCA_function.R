@@ -68,7 +68,7 @@ pca_function <- function(cancer_type_list, gene_string){
   # storing all plots
   output_data <- list("pca plots", "contribution dataframes")
   output_data[["contribution dataframes"]] <- list()
-  output_data[["pca_plots"]][[current_cancer_type]] <- list()
+  output_data[["pca plots"]][[current_cancer_type]] <- list()
   
   
   #2 Formatting and looping through cancer type data------------------------------
@@ -195,7 +195,7 @@ pca_function <- function(cancer_type_list, gene_string){
             
             pca_plot
             
-            output_data[["pca_plots"]][[current_cancer_type]][[current_gene]][[paste0(pcx, "_", pcy)]] <- pca_plot
+            output_data[["pca plots"]][[current_cancer_type]][[current_gene]][[paste0(pcx, "_", pcy)]] <- pca_plot
             
             #dir.create(file.path(paste0("out/pca/", current_cancer_type)), showWarnings = FALSE)
             #dir.create(file.path(paste0("out/pca/", current_cancer_type, "/", current_gene)), showWarnings = FALSE)

@@ -104,8 +104,12 @@ ui <- fluidPage(
       uiOutput("pcy_menu"), 
 
       # Display PCA plot
-      plotlyOutput("display_plot", width = "100%",
-                   height = "1000px"), 
+      plotlyOutput("display_pca_plot", width = "100%",
+                   height = "600px"), 
+      
+      # Display scree plot
+      plotlyOutput("display_scree_plot", width = "100%",
+                   height = "600px"),
       
       # Download buttons
       uiOutput("download_pdf_button"), 
@@ -123,7 +127,7 @@ server <- function(input, output) {
   observeEvent(input$button_pca_analysis, {
     
     # PCA function
-    out_plots <- pca_function(input$cancer_type_list, input$gene_string)
+    output_data <- pca_function(input$cancer_type_list, input$gene_string)
     
     # Re-assigning names to cancer types
     input_cancer_type <- input$cancer_type_list 
@@ -166,11 +170,23 @@ server <- function(input, output) {
     display_pcx_data <- reactive({input$display_pcx})
     display_pcy_data <- reactive({input$display_pcy})
     
-    # Plot
-    output$display_plot <- renderPlotly({
+    # PCA plot
+    output$display_pca_plot <- renderPlotly({
       validate(need(input$display_cancer_type, input$display_gene, message = FALSE)) # Validate needs
-        out_plots[[input$display_cancer_type]][[input$display_gene]][[paste0(input$display_pcx, "_", input$display_pcy)]]
+        output_data[["pca plots"]][[input$display_cancer_type]][[input$display_gene]][[paste0(input$display_pcx, "_", input$display_pcy)]]
       }) # Render Plotly
+    
+    # Scree plot
+    output$display_scree_plot <- renderPlotly({
+      validate(need(input$display_cancer_type, input$display_gene, message = FALSE)) # Validate needs
+      ggplotly(
+        ggplot(data = output_data[["contribution dataframes"]][[input$display_cancer_type]], 
+               mapping = aes(x = PC, y = contribution)) +
+          geom_bar(stat="identity", fill = "chocolate") +
+          labs(title = paste0("Principal Component Variance in ", names(input_cancer_type))) +
+          xlab("Principal Component") + ylab("Variance (%)") +
+      ) # ggplotly()
+    }) # Render Plotly
     
     # Download all plots-------------------------------------------------------------------------------------------
     # Reactive download buttons
@@ -185,17 +201,17 @@ server <- function(input, output) {
         # create png folder
         dir.create("out_download", showWarnings = FALSE)
         # loop through cancer type
-        for(current_cancer_type in names(out_plots)){
+        for(current_cancer_type in names(output_data[["pca plots"]])){
           dir.create(file.path(paste0("out_download/", current_cancer_type)), showWarnings = FALSE)
           # loop through genes
-          for(current_gene in names(out_plots[[current_cancer_type]])){
+          for(current_gene in names(output_data[["pca plots"]][[current_cancer_type]])){
             dir.create(file.path(paste0("out_download/", current_cancer_type, "/", current_gene)), showWarnings = FALSE)
             # loop through pca combinations
-            for(pca_combination in names(out_plots[[current_cancer_type]][[current_gene]])){
+            for(pca_combination in names(output_data[["pca plots"]][[current_cancer_type]][[current_gene]])){
               # save each graph
               out_plot_fp <- paste0("out_download/", current_cancer_type, "/", current_gene, "/", pca_combination, ".png")
               ggsave(out_plot_fp,
-                     plot = out_plots[[current_cancer_type]][[current_gene]][[pca_combination]], 
+                     plot = output_data[["pca plots"]][[current_cancer_type]][[current_gene]][[pca_combination]], 
                      width = 8, height = 6
                      )
             }
@@ -216,7 +232,7 @@ server <- function(input, output) {
       filename = function() {"plots.pdf"}, 
       content = function(file) {
         pdf(file, onefile = TRUE, width = 8, height = 6)
-        for(plot_printout in out_plots){ print(plot_printout)}
+        for(plot_printout in output_data[["pca plots"]]){ print(plot_printout)}
         dev.off()
       })                      
     
