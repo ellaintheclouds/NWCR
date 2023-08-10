@@ -68,7 +68,7 @@ pca_function <- function(cancer_type_list, gene_string){
   # storing all plots
   output_data <- list("pca plots", "contribution dataframes")
   output_data[["contribution dataframes"]] <- list()
-  output_data[["pca plots"]][[current_cancer_type]] <- list()
+  output_data[["pca plots"]] <- list()
   
   
   #2 Formatting and looping through cancer type data------------------------------
@@ -80,6 +80,8 @@ pca_function <- function(cancer_type_list, gene_string){
     
     current_file_name <- paste0(current_cancer_type, ".rds")
     print(current_file_name) # Prints the names of the files that are being accessed in the loop
+    
+    output_data[["pca plots"]][[current_cancer_type]] <- list()
     
     #data_RNAseq <- readRDS(current_file_name) # Reads in the file to be used in this iteration of the loop
     data_RNAseq <- readRDS(paste0("data/", current_file_name))  
@@ -124,9 +126,19 @@ pca_function <- function(cancer_type_list, gene_string){
     
     # The x-/y-coordinates to plot for each PC
     pca_positions <- as.data.frame(count_pca$x)
-    pca_summary <- summary(count_pca)$importance[2,] * 100 # Showing the contribution of each position, to represent its importance.----------------------------------------------------------------------------------------------------------------------------------------------------
     
-    output_data[["contribution dataframes"]][[current_cancer_type]] <- contribution_dataframe
+    # Making scree plots
+    pca_summary <- summary(count_pca)$importance[2,] * 100 # Showing the contribution of each position, to represent its importance.----------------------------------------------------------------------------------------------------------------------------------------------------
+    contribution_dataframe <- data.frame(PC = 1:10, contribution = pca_summary[1:10])
+    
+    scree_plot <- ggplot(data = contribution_dataframe, 
+           mapping = aes(x = PC, y = contribution)) +
+      geom_bar(stat="identity", fill = "chocolate") +
+      labs(title = paste0("Principal Component Variance in ", names(current_cancer_type))) +
+      xlab("Principal Component") + ylab("Variance (%)") + 
+      scale_x_discrete(limit = c("PC1", "PC2", "PC3", "PC4", "PC5", "PC6", "PC7", "PC8", "PC9", "PC10"))
+    
+    output_data[["contribution dataframes"]][[current_cancer_type]] <- scree_plot
     
     
     #6 Formatting and looping through gene data-------------------------------------
@@ -192,8 +204,6 @@ pca_function <- function(cancer_type_list, gene_string){
               xlab(paste0("PC", pcx, " (", pca_summary[pcx], ")")) + 
               ylab(paste0("PC", pcy, " (", pca_summary[pcy], ")")) + 
               scale_colour_viridis()
-            
-            pca_plot
             
             output_data[["pca plots"]][[current_cancer_type]][[current_gene]][[paste0(pcx, "_", pcy)]] <- pca_plot
             

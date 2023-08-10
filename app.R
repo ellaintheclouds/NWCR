@@ -178,14 +178,8 @@ server <- function(input, output) {
     
     # Scree plot
     output$display_scree_plot <- renderPlotly({
-      validate(need(input$display_cancer_type, input$display_gene, message = FALSE)) # Validate needs
-      ggplotly(
-        ggplot(data = output_data[["contribution dataframes"]][[input$display_cancer_type]], 
-               mapping = aes(x = PC, y = contribution)) +
-          geom_bar(stat="identity", fill = "chocolate") +
-          labs(title = paste0("Principal Component Variance in ", names(input_cancer_type))) +
-          xlab("Principal Component") + ylab("Variance (%)") +
-      ) # ggplotly()
+      validate(need(input$display_cancer_type, message = FALSE)) # Validate needs
+      output_data[["contribution dataframes"]][[input$display_cancer_type]]
     }) # Render Plotly
     
     # Download all plots-------------------------------------------------------------------------------------------
