@@ -124,7 +124,7 @@ pca_function <- function(cancer_type_list, gene_string){
     
     # The x-/y-coordinates to plot for each PC
     pca_positions <- as.data.frame(count_pca$x)
-    pca_summary <- summary(count_pca)$importance[2,] * 100 # Showing the contribution of each position, to represent its importance.
+    pca_summary <- summary(count_pca)$importance[2,] * 100 # Showing the contribution of each position, to represent its importance.----------------------------------------------------------------------------------------------------------------------------------------------------
     
 
     #6 Formatting and looping through gene data-------------------------------------
@@ -178,7 +178,7 @@ pca_function <- function(cancer_type_list, gene_string){
               colnames(current_pca_plot_df) <- c("sample_submitter_id", "tpm", "pcx", "pcy")
               
               # Labels for the axis
-              tpm_label <- "Transcripts\n per\n Millon"
+              tpm_label <- "Transcripts\n per\n Million"
               
               title_label <- paste0(current_gene, " Expression in ", names(current_cancer_type))
               
