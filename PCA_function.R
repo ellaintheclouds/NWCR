@@ -134,13 +134,13 @@ pca_function <- function(cancer_type_list, gene_string){
     percentile_dataframe <- as.data.frame(t(as.data.frame(gene_contribution_percentile)))
     percentile_dataframe$PC <- paste0("PC", 1:nrow(percentile_dataframe))
     
-    output_data[["contribution percentile dataframes"]][[current_cancer_type]] <- percentile_dataframe
     
     contr_and_per_df <- merge(contribution_dataframe, percentile_dataframe, by = "PC")
     contr_and_per_df$PC <- factor(contr_and_per_df$PC, levels = paste0("PC", 1:10))
     contr_and_per_df <- contr_and_per_df[order(contr_and_per_df$PC),]
     row.names(contr_and_per_df) <- contr_and_per_df$PC
     
+    output_data[["contribution percentile dataframes"]][[current_cancer_type]] <- contr_and_per_df
     
     #6 Formatting and looping through gene data-------------------------------------
     for(current_gene in gene_list){
@@ -239,6 +239,10 @@ pca_function <- function(cancer_type_list, gene_string){
   
 } # Function
 
-test_output_data <- pca_function("TCGA-LAML", "ENSG00000000003.15")
-dim(test_output_data[["contribution percentile dataframes"]][[1]])
-output_data[["contribution plots"]][[1]][[1]]
+#if(TRUE){
+#  test_output_data <- pca_function("TCGA-LAML", "ENSG00000000003.15")
+#  dim(test_output_data[["contribution percentile dataframes"]][[1]])
+#  dim(test_output_data[["contribution percentile dataframes"]][[1]])
+#  
+#}
+  #output_data[["contribution plots"]][[1]][[1]]

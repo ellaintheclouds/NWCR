@@ -179,7 +179,38 @@ server <- function(input, output) {
     # Scree plot
     output$display_scree_plot <- renderPlotly({
       validate(need(input$display_cancer_type, message = FALSE)) # Validate needs
-      output_data[["contribution dataframes"]][[input$display_cancer_type]]
+     # output_data[["contribution plots"]][[input$display_cancer_type]][[input$display_gene]]
+      screeplot_df <- output_data[["contribution percentile dataframes"]][[input$display_cancer_type]]
+      if(input$display_gene %in% colnames(screeplot_df)){
+        current_scree_data <- screeplot_df[,c("PC", "contribution", input$display_gene)]
+        colnames(current_scree_data) <- c("PC", "contribution", "current_gene_column") 
+        
+        percent_label <- paste0(input$display_cancer_type, "\nContribution\n(%)")
+        
+        scree_plot <- ggplot(data = current_scree_data, mapping = aes(x = PC, y = contribution)) +
+          geom_bar(stat = "identity", aes(fill = current_gene_column)) +
+          theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+          theme(panel.grid = element_blank()) + 
+          labs(fill = percent_label) +
+          xlab("Principal Component") + ylab("Variance Explained by PC (%)") + 
+          scale_x_discrete(limit = c("PC1", "PC2", "PC3", "PC4", "PC5", "PC6", "PC7", "PC8", "PC9", "PC10")) +
+          theme_bw() + 
+          scale_fill_viridis(discrete = TRUE, option = "magma")
+      } else {
+        current_scree_data <- screeplot_df[,c("PC", "contribution")]
+        colnames(current_scree_data) <- c("PC", "contribution") 
+        
+        scree_plot <- ggplot(data = current_scree_data, mapping = aes(x = PC, y = contribution)) +
+          geom_bar(stat = "identity") +
+          theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+          labs(title = "This gene has low levels of expression, so was removed from PCA analysis.") +
+          xlab("Principal Component") + ylab("Variance Explained by PC (%)") + 
+          scale_x_discrete(limit = c("PC1", "PC2", "PC3", "PC4", "PC5", "PC6", "PC7", "PC8", "PC9", "PC10")) +
+          theme_bw() + 
+          scale_fill_viridis(discrete = TRUE, option = "magma")
+      } # Else   
+      
+      #ggplot(data=data.frame(x=1:5, y=1:5), aes(x=x, y=y)) + geom_point()
     }) # Render Plotly
     
     # Download all plots-------------------------------------------------------------------------------------------
