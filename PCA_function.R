@@ -146,22 +146,6 @@ pca_function <- function(cancer_type_list, gene_string){
     for(current_gene in gene_list){
       
       output_data[["pca plots"]][[current_cancer_type]][[current_gene]] <- list()
-      output_data[["contribution plots"]][[current_cancer_type]][[current_gene]] <- list()
-      
-      # Scree plot
-      percent_label <- paste0(current_gene, "\nContribution\n(%)")
-
-      scree_plot <- ggplot(data = contr_and_per_df, #####################################################################
-                           mapping = aes(x = PC, y = contribution)) +
-        geom_bar(stat="identity", aes(fill = get(current_gene))) +
-        labs(fill = percent_label) +
-        xlab("Principal Component") + ylab("Variance Explained by PC (%)") + 
-        scale_x_discrete(limit = c("PC1", "PC2", "PC3", "PC4", "PC5", "PC6", "PC7", "PC8", "PC9", "PC10")) +
-        theme_bw() + 
-        scale_colour_viridis()
-      
-      
-      output_data[["contribution plots"]][[current_cancer_type]][[current_gene]] <- scree_plot
       
       # Tpm 
       tpm_dataframe <- as.data.frame(t(tpm_matrix))
@@ -218,10 +202,10 @@ pca_function <- function(cancer_type_list, gene_string){
             pca_plot <- ggplot(data = current_pca_plot_df, aes(x = pcx, y = pcy)) + 
               geom_point(aes(colour = tpm)) +
               labs(title = pca_title, colour = tpm_label) + 
-              theme_bw() + 
+              theme_minimal() + 
               xlab(paste0("PC", pcx, " (", pca_summary[pcx], ")")) + 
               ylab(paste0("PC", pcy, " (", pca_summary[pcy], ")")) + 
-              scale_colour_viridis()
+              scale_color_viridis(option = "A")
             
             output_data[["pca plots"]][[current_cancer_type]][[current_gene]][[paste0(pcx, "_", pcy)]] <- pca_plot
             
@@ -239,10 +223,11 @@ pca_function <- function(cancer_type_list, gene_string){
   
 } # Function
 
-#if(TRUE){
-#  test_output_data <- pca_function("TCGA-LAML", "ENSG00000000003.15")
-#  dim(test_output_data[["contribution percentile dataframes"]][[1]])
-#  dim(test_output_data[["contribution percentile dataframes"]][[1]])
-#  
-#}
-  #output_data[["contribution plots"]][[1]][[1]]
+test_output_data <- pca_function("TCGA-LAML", "ENSG00000000003.15")
+test_output_data[["contribution percentile dataframes"]][[1]][1:10,1:10]
+
+#ENSG00000000419.13
+#ENSG00000000457.14
+#ENSG00000000460.17
+#ENSG00000000938.13
+#ENSG00000000971.16

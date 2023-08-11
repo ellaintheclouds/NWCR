@@ -185,28 +185,22 @@ server <- function(input, output) {
         current_scree_data <- screeplot_df[,c("PC", "contribution", input$display_gene)]
         colnames(current_scree_data) <- c("PC", "contribution", "current_gene_column") 
         
-        percent_label <- paste0(input$display_cancer_type, "\nContribution\n(%)")
+        percent_label <- paste0(input$display_gene, "\nContribution\n(%)")
         
-        scree_plot <- ggplot(data = current_scree_data, mapping = aes(x = PC, y = contribution)) +
-          geom_bar(stat = "identity", aes(fill = current_gene_column)) +
-          theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
-          theme(panel.grid = element_blank()) + 
-          labs(fill = percent_label) +
-          xlab("Principal Component") + ylab("Variance Explained by PC (%)") + 
+        scree_plot <- ggplot(data = current_scree_data, mapping = aes(x = PC, y = contribution, fill = current_gene_column)) +
+          geom_bar(stat = "identity") +
+          labs(fill = percent_label) + xlab("Principal Component") + ylab("Variance Explained by PC (%)") + 
           scale_x_discrete(limit = c("PC1", "PC2", "PC3", "PC4", "PC5", "PC6", "PC7", "PC8", "PC9", "PC10")) +
-          theme_bw() + 
-          scale_fill_viridis(discrete = TRUE, option = "magma")
+          theme_minimal() + 
+          scale_fill_viridis(option = "magma")
       } else {
         current_scree_data <- screeplot_df[,c("PC", "contribution")]
         colnames(current_scree_data) <- c("PC", "contribution") 
         
         scree_plot <- ggplot(data = current_scree_data, mapping = aes(x = PC, y = contribution)) +
-          geom_bar(stat = "identity") +
-          theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
-          labs(title = "This gene has low levels of expression, so was removed from PCA analysis.") +
-          xlab("Principal Component") + ylab("Variance Explained by PC (%)") + 
+          geom_bar(stat = "identity") + xlab("Principal Component") + ylab("Variance Explained by PC (%)") + 
           scale_x_discrete(limit = c("PC1", "PC2", "PC3", "PC4", "PC5", "PC6", "PC7", "PC8", "PC9", "PC10")) +
-          theme_bw() + 
+          theme_minimal() + 
           scale_fill_viridis(discrete = TRUE, option = "magma")
       } # Else   
       
