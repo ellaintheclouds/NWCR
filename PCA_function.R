@@ -66,10 +66,10 @@ pca_function <- function(cancer_type_list, gene_string){
   gene_list <- strsplit(gene_string, split = "\n")[[1]] # Split the user input into a list
   
   # storing all plots
-  output_data <- list("pca plots", "contribution dataframes")
-  output_data[["contribution dataframes"]] <- list()
+  output_data <- list("pca plots", "contribution plots", "contribution percentile dataframes", "pca dataframes")
+  output_data[["contribution plots"]] <- list()
   output_data[["pca plots"]] <- list()
-  
+
   
   #2 Formatting and looping through cancer type data------------------------------
   for(current_cancer_type in cancer_type_list){
@@ -127,25 +127,43 @@ pca_function <- function(cancer_type_list, gene_string){
     # The x-/y-coordinates to plot for each PC
     pca_positions <- as.data.frame(count_pca$x)
     
-    # Making scree plots
+    # Making scree plots----------
+    # Foratting data: shorten, transform, merge
     pca_summary <- summary(count_pca)$importance[2,] * 100 # Showing the contribution of each position, to represent its importance.----------------------------------------------------------------------------------------------------------------------------------------------------
-    contribution_dataframe <- data.frame(PC = 1:10, contribution = pca_summary[1:10])
+    contribution_dataframe <- data.frame(PC = paste0("PC", 1:10), contribution = pca_summary[1:10])
+    percentile_dataframe <- as.data.frame(t(as.data.frame(gene_contribution_percentile)))
+    percentile_dataframe$PC <- paste0("PC", 1:nrow(percentile_dataframe))
     
-    scree_plot <- ggplot(data = contribution_dataframe, 
-           mapping = aes(x = PC, y = contribution)) +
-      geom_bar(stat="identity", fill = "chocolate") +
-      labs(title = paste0("Principal Component Variance in ", names(current_cancer_type))) +
-      xlab("Principal Component") + ylab("Variance (%)") + 
-      scale_x_discrete(limit = c("PC1", "PC2", "PC3", "PC4", "PC5", "PC6", "PC7", "PC8", "PC9", "PC10"))
+    output_data[["contribution percentile dataframes"]][[current_cancer_type]] <- percentile_dataframe
     
-    output_data[["contribution dataframes"]][[current_cancer_type]] <- scree_plot
+    contr_and_per_df <- merge(contribution_dataframe, percentile_dataframe, by = "PC")
+    contr_and_per_df$PC <- factor(contr_and_per_df$PC, levels = paste0("PC", 1:10))
+    contr_and_per_df <- contr_and_per_df[order(contr_and_per_df$PC),]
+    row.names(contr_and_per_df) <- contr_and_per_df$PC
     
     
     #6 Formatting and looping through gene data-------------------------------------
     for(current_gene in gene_list){
       
       output_data[["pca plots"]][[current_cancer_type]][[current_gene]] <- list()
+      output_data[["contribution plots"]][[current_cancer_type]][[current_gene]] <- list()
       
+      # Scree plot
+      percent_label <- paste0(current_gene, "\nContribution\n(%)")
+
+      scree_plot <- ggplot(data = contr_and_per_df, #####################################################################
+                           mapping = aes(x = PC, y = contribution)) +
+        geom_bar(stat="identity", aes(fill = get(current_gene))) +
+        labs(fill = percent_label) +
+        xlab("Principal Component") + ylab("Variance Explained by PC (%)") + 
+        scale_x_discrete(limit = c("PC1", "PC2", "PC3", "PC4", "PC5", "PC6", "PC7", "PC8", "PC9", "PC10")) +
+        theme_bw() + 
+        scale_colour_viridis()
+      
+      
+      output_data[["contribution plots"]][[current_cancer_type]][[current_gene]] <- scree_plot
+      
+      # Tpm 
       tpm_dataframe <- as.data.frame(t(tpm_matrix))
       tpm_dataframe$sample_id_tpm <- rownames(tpm_dataframe)
       tpm_dataframe <- tpm_dataframe[, c("sample_id_tpm", current_gene)]
@@ -175,8 +193,8 @@ pca_function <- function(cancer_type_list, gene_string){
                                               gene = row.names(gene_contribution))
             # order by contribution percentile
             top_contrib_genes_x <- top_contrib_genes_x[order(top_contrib_genes_x$gene_contribution_percentile),]
-            print(paste0("Top contributing genes for ", pcx, ":"))
-            print(head(top_contrib_genes_x))
+            #print(paste0("Top contributing genes for ", pcx, ":"))
+            #print(head(top_contrib_genes_x))
             
             ## Find top contributing genes for pcy
             top_contrib_genes_y <- data.frame(contribution = gene_contribution[,pcy], 
@@ -184,22 +202,22 @@ pca_function <- function(cancer_type_list, gene_string){
                                               gene = row.names(gene_contribution))
             # order by contribution percentile
             top_contrib_genes_y <- top_contrib_genes_y[order(top_contrib_genes_y$gene_contribution_percentile),]
-            print(paste0("Top contributing gene for ", pcy, ":"))
-            print(head(top_contrib_genes_y))
+            #print(paste0("Top contributing gene for ", pcy, ":"))
+            #print(head(top_contrib_genes_y))
             
             ## plot PCA
             current_pca_plot_df <- pca_plot_df[,c("sample_submitter_id", "tpm", paste0("PC", pcx), paste0("PC", pcy))]
             colnames(current_pca_plot_df) <- c("sample_submitter_id", "tpm", "pcx", "pcy")
             
             # Labels for the axis
-            tpm_label <- "Transcripts\n per\n Million"
+            tpm_label <- "Transcripts\nper\nMillion"
             
-            title_label <- paste0(current_gene, " Expression in ", names(current_cancer_type))
+            pca_title <- paste0(current_gene, " Expression in ", names(current_cancer_type))
             
             # Plot
             pca_plot <- ggplot(data = current_pca_plot_df, aes(x = pcx, y = pcy)) + 
               geom_point(aes(colour = tpm)) +
-              labs(title = title_label, colour = tpm_label) + 
+              labs(title = pca_title, colour = tpm_label) + 
               theme_bw() + 
               xlab(paste0("PC", pcx, " (", pca_summary[pcx], ")")) + 
               ylab(paste0("PC", pcy, " (", pca_summary[pcy], ")")) + 
@@ -220,3 +238,7 @@ pca_function <- function(cancer_type_list, gene_string){
   return(output_data)
   
 } # Function
+
+test_output_data <- pca_function("TCGA-LAML", "ENSG00000000003.15")
+dim(test_output_data[["contribution percentile dataframes"]][[1]])
+output_data[["contribution plots"]][[1]][[1]]
