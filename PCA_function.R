@@ -62,14 +62,13 @@ for(current_name in names(list_of_cancer_types)){
 
 
 #1 Start of function------------------------------------------------------------
-pca_function <- function(cancer_type_list, gene_string){
-  gene_list <- strsplit(gene_string, split = "\n")[[1]] # Split the user input into a list
+pca_function <- function(cancer_type_list, gene_list){
   
   # storing all plots
   output_data <- list("pca plots", "contribution plots", "contribution percentile dataframes", "pca dataframes")
   output_data[["contribution plots"]] <- list()
   output_data[["pca plots"]] <- list()
-
+  
   
   #2 Formatting and looping through cancer type data------------------------------
   for(current_cancer_type in cancer_type_list){
@@ -133,7 +132,6 @@ pca_function <- function(cancer_type_list, gene_string){
     contribution_dataframe <- data.frame(PC = paste0("PC", 1:10), contribution = pca_summary[1:10])
     percentile_dataframe <- as.data.frame(t(as.data.frame(gene_contribution_percentile)))
     percentile_dataframe$PC <- paste0("PC", 1:nrow(percentile_dataframe))
-    
     
     contr_and_per_df <- merge(contribution_dataframe, percentile_dataframe, by = "PC")
     contr_and_per_df$PC <- factor(contr_and_per_df$PC, levels = paste0("PC", 1:10))
@@ -222,12 +220,3 @@ pca_function <- function(cancer_type_list, gene_string){
   return(output_data)
   
 } # Function
-
-test_output_data <- pca_function("TCGA-LAML", "ENSG00000000003.15")
-test_output_data[["contribution percentile dataframes"]][[1]][1:10,1:10]
-
-#ENSG00000000419.13
-#ENSG00000000457.14
-#ENSG00000000460.17
-#ENSG00000000938.13
-#ENSG00000000971.16

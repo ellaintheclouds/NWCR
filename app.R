@@ -22,23 +22,23 @@ if (!require("zip", quietly = TRUE)) { install.packages("zip") }
 library(shiny)
 library(stringr) # Makes working with strings simpler.
 library(viridis) # Colour scheme.
-library(zip)
+library(zip) # Allows the creation of a zip file. 
 
 # Biological data
 library(TCGAbiolinks) # For integrative analysis of GDC data.
 library(ggcorrplot) # Allows visulaisation of a correlation matrix using ggplot2.
 library(SummarizedExperiment) # For storing processed data from high-throughput sequencing assays.
 library(edgeR) # Differential expression analysis of RNA-seq expression profiles.
-# Allows reordering  of matrix correlation and displays significance level on the plot. Allows computation of a matrix of p-values.
 library(plotly) # Creates interactive, publication-suitable graphs.
 
 # PCA
-library(factoextra) # For principal component analysis
+library(factoextra) # For principal component analysis.
 library(ggfortify) # Allows plotting of PCA and survival analysis.
-library(umap) # Algorithm for dimensional reduction
+library(umap) # Algorithm for dimensional reduction.
 
 # Data----------
 source("PCA_function.R")
+source("input_name_function.R")
 
 list_of_cancer_types <- c("Acute Myeloid Leukemia" = "TCGA-LAML",                                                                                
                           "Adrenocortical Carcinoma" = "TCGA-ACC",                                                                              
@@ -74,6 +74,7 @@ for(current_name in names(list_of_cancer_types)){
   list_of_cancer_types_rev[current_code] = current_name
 }
 
+
 # UI----------------------------------------------------------------------------
 ui <- fluidPage(
   
@@ -87,7 +88,7 @@ ui <- fluidPage(
       br(), 
       
       # Gene input
-      print(HTML("<strong>Input gene names</strong> <br/> use Ensembl format and separate by new lines")), 
+      print(HTML("<strong>Input gene names</strong> <br/> genes can be in name format, Ensembl ID, or Ensembl version <br/> (separate by new lines) ")), 
       textAreaInput("gene_string", "", rows = 5), 
       
       # Button that triggers PCA computation
@@ -102,7 +103,7 @@ ui <- fluidPage(
       uiOutput("gene_menu"), 
       uiOutput("pcx_menu"), 
       uiOutput("pcy_menu"), 
-
+      
       # Display PCA plot
       plotlyOutput("display_pca_plot", width = "100%",
                    height = "600px"), 
@@ -114,7 +115,6 @@ ui <- fluidPage(
       # Download buttons
       uiOutput("download_pdf_button"), 
       uiOutput("download_zip_button")
-
       
     ) # Main panel
   ) # Sidebar layout
@@ -126,11 +126,17 @@ server <- function(input, output) {
   
   observeEvent(input$button_pca_analysis, {
     
-    # PCA function
-    output_data <- pca_function(input$cancer_type_list, input$gene_string)
+    # Formatting function----------#############################################
+    gene_list <- strsplit(input$gene_string, split = "\n")[[1]] # Split the user input into a list
+    formatting_output <- input_format(gene_list)
+    formatted_gene_list <- formatting_output[["formatted_gene_list"]]
+    print(formatted_gene_list)
+    
+    # PCA function----------####################################################
+    output_data <- pca_function(input$cancer_type_list, formatted_gene_list)
     
     # Re-assigning names to cancer types
-    input_cancer_type <- input$cancer_type_list 
+    input_cancer_type <- input$cancer_type_list
     names(input_cancer_type) <- list_of_cancer_types_rev[input_cancer_type]
     
     # Display plot (interactive)-----
@@ -140,7 +146,7 @@ server <- function(input, output) {
     })
     
     output$gene_menu <- renderUI({
-      selectInput("display_gene", "Gene", strsplit(input$gene_string, split = "\n")[[1]], selected = strsplit(input$gene_string, split = "\n")[[1]][1])
+      selectInput("display_gene", "Gene", formatted_gene_list, selected = formatted_gene_list[1])
     })
     
     output$pcx_menu <- renderUI({
@@ -173,13 +179,12 @@ server <- function(input, output) {
     # PCA plot
     output$display_pca_plot <- renderPlotly({
       validate(need(input$display_cancer_type, input$display_gene, message = FALSE)) # Validate needs
-        output_data[["pca plots"]][[input$display_cancer_type]][[input$display_gene]][[paste0(input$display_pcx, "_", input$display_pcy)]]
-      }) # Render Plotly
+      output_data[["pca plots"]][[input$display_cancer_type]][[input$display_gene]][[paste0(input$display_pcx, "_", input$display_pcy)]]
+    }) # Render Plotly
     
     # Scree plot
     output$display_scree_plot <- renderPlotly({
       validate(need(input$display_cancer_type, message = FALSE)) # Validate needs
-     # output_data[["contribution plots"]][[input$display_cancer_type]][[input$display_gene]]
       screeplot_df <- output_data[["contribution percentile dataframes"]][[input$display_cancer_type]]
       if(input$display_gene %in% colnames(screeplot_df)){
         current_scree_data <- screeplot_df[,c("PC", "contribution", input$display_gene)]
@@ -204,8 +209,8 @@ server <- function(input, output) {
           scale_fill_viridis(discrete = TRUE, option = "magma")
       } # Else   
       
-      #ggplot(data=data.frame(x=1:5, y=1:5), aes(x=x, y=y)) + geom_point()
     }) # Render Plotly
+    
     
     # Download all plots-------------------------------------------------------------------------------------------
     # Reactive download buttons
@@ -217,34 +222,33 @@ server <- function(input, output) {
       filename = function(){"out.zip"},
       content = function(file){
         if(TRUE){
-        # create png folder
-        dir.create("out_download", showWarnings = FALSE)
-        # loop through cancer type
-        for(current_cancer_type in names(output_data[["pca plots"]])){
-          dir.create(file.path(paste0("out_download/", current_cancer_type)), showWarnings = FALSE)
-          # loop through genes
-          for(current_gene in names(output_data[["pca plots"]][[current_cancer_type]])){
-            dir.create(file.path(paste0("out_download/", current_cancer_type, "/", current_gene)), showWarnings = FALSE)
-            # loop through pca combinations
-            for(pca_combination in names(output_data[["pca plots"]][[current_cancer_type]][[current_gene]])){
-              # save each graph
-              out_plot_fp <- paste0("out_download/", current_cancer_type, "/", current_gene, "/", pca_combination, ".png")
-              ggsave(out_plot_fp,
-                     plot = output_data[["pca plots"]][[current_cancer_type]][[current_gene]][[pca_combination]], 
-                     width = 8, height = 6
-                     )
-            }
-          }        
+          # create png folder
+          dir.create("out_download", showWarnings = FALSE)
+          # loop through cancer type
+          for(current_cancer_type in names(output_data[["pca plots"]])){
+            dir.create(file.path(paste0("out_download/", current_cancer_type)), showWarnings = FALSE)
+            # loop through genes
+            for(current_gene in names(output_data[["pca plots"]][[current_cancer_type]])){
+              dir.create(file.path(paste0("out_download/", current_cancer_type, "/", current_gene)), showWarnings = FALSE)
+              # loop through pca combinations
+              for(pca_combination in names(output_data[["pca plots"]][[current_cancer_type]][[current_gene]])){
+                # save each graph
+                out_plot_fp <- paste0("out_download/", current_cancer_type, "/", current_gene, "/", pca_combination, ".png")
+                ggsave(out_plot_fp,
+                       plot = output_data[["pca plots"]][[current_cancer_type]][[current_gene]][[pca_combination]], 
+                       width = 8, height = 6
+                )
+              }
+            }        
+          }
+          all_files <- list.files("out_download", full.names = TRUE)
         }
-        all_files <- list.files("out_download", full.names = TRUE)
-        }
-
+        
         zip::zip(zipfile = file, files = all_files)
       }, # Content function
       
       contentType = "application/zip"
-      ) # Download handler
-    
+    ) # Download handler
     
     # Create singular .pdf containing all plots
     output$download_pdf = downloadHandler(
@@ -261,5 +265,3 @@ server <- function(input, output) {
 
 # Run---------------------------------------------------------------------------
 shinyApp(ui = ui, server = server)
-
-#Test genes ENSG00000000003.15ENSG00000000005.6
