@@ -26,6 +26,9 @@ library(factoextra) # For principal component analysis
 library(ggfortify) # Allows plotting of PCA and survival analysis.
 library(umap) # Algorithm for dimensional reduction
 
+# Data----------
+source("input_name_function.R")
+
 list_of_cancer_types <- c("Acute Myeloid Leukemia" = "TCGA-LAML",                                                                                
                           "Adrenocortical Carcinoma" = "TCGA-ACC",                                                                              
                           "Brain Lower Grade Glioma" = "TCGA-LGG",                                                                              
@@ -63,6 +66,10 @@ for(current_name in names(list_of_cancer_types)){
 
 #1 Start of function------------------------------------------------------------
 pca_function <- function(cancer_type_list, gene_list){
+  
+  # Formatting genes
+  formatting_output <- input_format(gene_list)
+  cancer_names_assigned <- data.frame(gene_id = formatting_output[["formatted_gene_list"]], gene_name = formatting_output[["gene_names_assigned"]])
   
   # storing all plots
   output_data <- list("pca plots", "contribution plots", "contribution percentile dataframes", "pca dataframes")
@@ -143,6 +150,8 @@ pca_function <- function(cancer_type_list, gene_list){
     #6 Formatting and looping through gene data-------------------------------------
     for(current_gene in gene_list){
       
+      current_gene_name <- cancer_names_assigned[cancer_names_assigned$gene_id == current_gene, "gene_name"]
+      
       output_data[["pca plots"]][[current_cancer_type]][[current_gene]] <- list()
       
       # Tpm 
@@ -175,8 +184,8 @@ pca_function <- function(cancer_type_list, gene_list){
                                               gene = row.names(gene_contribution))
             # order by contribution percentile
             top_contrib_genes_x <- top_contrib_genes_x[order(top_contrib_genes_x$gene_contribution_percentile),]
-            #print(paste0("Top contributing genes for ", pcx, ":"))
-            #print(head(top_contrib_genes_x))
+            print(paste0("Top contributing genes for ", pcx, ":"))
+            print(head(top_contrib_genes_x))
             
             ## Find top contributing genes for pcy
             top_contrib_genes_y <- data.frame(contribution = gene_contribution[,pcy], 
@@ -184,8 +193,8 @@ pca_function <- function(cancer_type_list, gene_list){
                                               gene = row.names(gene_contribution))
             # order by contribution percentile
             top_contrib_genes_y <- top_contrib_genes_y[order(top_contrib_genes_y$gene_contribution_percentile),]
-            #print(paste0("Top contributing gene for ", pcy, ":"))
-            #print(head(top_contrib_genes_y))
+            print(paste0("Top contributing gene for ", pcy, ":"))
+            print(head(top_contrib_genes_y))
             
             ## plot PCA
             current_pca_plot_df <- pca_plot_df[,c("sample_submitter_id", "tpm", paste0("PC", pcx), paste0("PC", pcy))]
@@ -194,7 +203,7 @@ pca_function <- function(cancer_type_list, gene_list){
             # Labels for the axis
             tpm_label <- "Transcripts\nper\nMillion"
             
-            pca_title <- paste0(current_gene, " Expression in ", names(current_cancer_type))
+            pca_title <- paste0(current_gene_name, " Expression in ", names(current_cancer_type))
             
             # Plot
             pca_plot <- ggplot(data = current_pca_plot_df, aes(x = pcx, y = pcy)) + 

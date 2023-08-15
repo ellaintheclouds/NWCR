@@ -88,7 +88,7 @@ ui <- fluidPage(
       br(), 
       
       # Gene input
-      print(HTML("<strong>Input gene names</strong> <br/> genes can be in name format, Ensembl ID, or Ensembl version <br/> (separate by new lines) ")), 
+      print(HTML("<strong>Input gene names</strong> <br/> genes format can be name or Ensembl ID <br/> (separate by new lines) ")), 
       textAreaInput("gene_string", "", rows = 5), 
       
       # Button that triggers PCA computation
@@ -129,10 +129,12 @@ server <- function(input, output) {
     # Formatting function----------#############################################
     gene_list <- strsplit(input$gene_string, split = "\n")[[1]] # Split the user input into a list
     formatting_output <- input_format(gene_list)
-    print(head(formatting_output[["formatted_gene_list"]]))
-    formatted_gene_list <- formatting_output[["formatted_gene_list"]]$gene_id
-    names(formatted_gene_list) <- formatting_output[["formatted_gene_list"]]$merged_name
+    cancer_names_assigned <- data.frame(gene_id = formatting_output[["formatted_gene_list"]], gene_name = formatting_output[["gene_names_assigned"]])
+    
+    formatted_gene_list <- formatting_output[["formatted_gene_list"]]
     print(formatted_gene_list)
+    
+    gene_name_list <- formatting_output[["gene_names_assigned"]]
     
     # PCA function----------####################################################
     output_data <- pca_function(input$cancer_type_list, formatted_gene_list)
@@ -143,14 +145,12 @@ server <- function(input, output) {
     
     # Display plot (interactive)-----
     # UI variable menus (with the first variable as default
-    print("DONE, ABOUT TO MAKE BUTTON")
-    
     output$cancer_type_menu <- renderUI({
       selectInput("display_cancer_type", "Cancer type", input_cancer_type, selected = input_cancer_type[1])
     })
     
     output$gene_menu <- renderUI({
-      selectInput("display_gene", "Gene", formatted_gene_list, selected = formatted_gene_list[1])
+      selectInput("display_gene_name", "Gene", gene_name_list, selected = formatted_gene_list[1])
     })
     
     output$pcx_menu <- renderUI({
@@ -174,20 +174,18 @@ server <- function(input, output) {
       output$pcy_menu <- renderUI({selectInput("display_pcy", "PC (y-axis)", pcy_choices, selected = pcy_choices[1])})
     })
     
-    # Selected data (reactive)
-    display_cancer_type_data <- reactive({input$display_cancer_type})
-    display_gene_data <- reactive({input$display_gene})
-    display_pcx_data <- reactive({input$display_pcx})
-    display_pcy_data <- reactive({input$display_pcy})
-    
     # PCA plot
     output$display_pca_plot <- renderPlotly({
+      display_gene <- cancer_names_assigned[cancer_names_assigned$gene_name == display_gene_name, "gene_id"]##################################################
+      
       validate(need(input$display_cancer_type, input$display_gene, message = FALSE)) # Validate needs
       output_data[["pca plots"]][[input$display_cancer_type]][[input$display_gene]][[paste0(input$display_pcx, "_", input$display_pcy)]]
     }) # Render Plotly
     
     # Scree plot
     output$display_scree_plot <- renderPlotly({
+      display_gene <- cancer_names_assigned[cancer_names_assigned$gene_name == display_gene_name, "gene_id"]##################################################
+      
       validate(need(input$display_cancer_type, message = FALSE)) # Validate needs
       screeplot_df <- output_data[["contribution percentile dataframes"]][[input$display_cancer_type]]
       if(input$display_gene %in% colnames(screeplot_df)){
@@ -216,7 +214,7 @@ server <- function(input, output) {
     }) # Render Plotly
     
     
-    # Download all plots-------------------------------------------------------------------------------------------
+    # Download all plots--------------------------------------------------------
     # Reactive download buttons
     output$download_zip_button <- renderUI(downloadButton("download_zip", "Download All Plot Images"))
     output$download_pdf_button <- renderUI(downloadButton("download_pdf", "Download All Plots as a PDF"))
