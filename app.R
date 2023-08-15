@@ -129,7 +129,9 @@ server <- function(input, output) {
     # Formatting function----------#############################################
     gene_list <- strsplit(input$gene_string, split = "\n")[[1]] # Split the user input into a list
     formatting_output <- input_format(gene_list)
-    formatted_gene_list <- formatting_output[["formatted_gene_list"]]
+    print(head(formatting_output[["formatted_gene_list"]]))
+    formatted_gene_list <- formatting_output[["formatted_gene_list"]]$gene_id
+    names(formatted_gene_list) <- formatting_output[["formatted_gene_list"]]$merged_name
     print(formatted_gene_list)
     
     # PCA function----------####################################################
@@ -141,6 +143,8 @@ server <- function(input, output) {
     
     # Display plot (interactive)-----
     # UI variable menus (with the first variable as default
+    print("DONE, ABOUT TO MAKE BUTTON")
+    
     output$cancer_type_menu <- renderUI({
       selectInput("display_cancer_type", "Cancer type", input_cancer_type, selected = input_cancer_type[1])
     })
