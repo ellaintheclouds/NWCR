@@ -26,9 +26,6 @@ library(factoextra) # For principal component analysis
 library(ggfortify) # Allows plotting of PCA and survival analysis.
 library(umap) # Algorithm for dimensional reduction
 
-# Data----------
-source("input_name_function.R")
-
 list_of_cancer_types <- c("Acute Myeloid Leukemia" = "TCGA-LAML",                                                                                
                           "Adrenocortical Carcinoma" = "TCGA-ACC",                                                                              
                           "Brain Lower Grade Glioma" = "TCGA-LGG",                                                                              
@@ -67,9 +64,7 @@ for(current_name in names(list_of_cancer_types)){
 #1 Start of function------------------------------------------------------------
 pca_function <- function(cancer_type_list, gene_list){
   
-  # Formatting genes
   formatting_output <- input_format(gene_list)
-  cancer_names_assigned <- data.frame(gene_id = formatting_output[["formatted_gene_list"]], gene_name = formatting_output[["gene_names_assigned"]])
   
   # storing all plots
   output_data <- list("pca plots", "contribution plots", "contribution percentile dataframes", "pca dataframes")
@@ -150,9 +145,10 @@ pca_function <- function(cancer_type_list, gene_list){
     #6 Formatting and looping through gene data-------------------------------------
     for(current_gene in gene_list){
       
-      current_gene_name <- cancer_names_assigned[cancer_names_assigned$gene_id == current_gene, "gene_name"]
-      
       output_data[["pca plots"]][[current_cancer_type]][[current_gene]] <- list()
+      
+      # Current gene name
+      current_gene_name <- formatting_output[["formatted_gene_list"]][formatting_output[["formatted_gene_list"]]$gene_id == current_gene, "gene_name"]
       
       # Tpm 
       tpm_dataframe <- as.data.frame(t(tpm_matrix))
@@ -215,11 +211,6 @@ pca_function <- function(cancer_type_list, gene_list){
               scale_color_viridis(option = "A")
             
             output_data[["pca plots"]][[current_cancer_type]][[current_gene]][[paste0(pcx, "_", pcy)]] <- pca_plot
-            
-            #dir.create(file.path(paste0("out/pca/", current_cancer_type)), showWarnings = FALSE)
-            #dir.create(file.path(paste0("out/pca/", current_cancer_type, "/", current_gene)), showWarnings = FALSE)
-            
-            #ggsave(paste0("out/pca/", current_cancer_type, "/", current_gene, "/PC", pcx, "_PC", pcy, ".png"), pca_plot, height = 12, width = 16, units = "cm")              
           } # Plotting PCs when pcx < pcy
         } # pcy
       } # pcx

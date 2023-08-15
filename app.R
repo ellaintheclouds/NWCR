@@ -88,7 +88,7 @@ ui <- fluidPage(
       br(), 
       
       # Gene input
-      print(HTML("<strong>Input gene names</strong> <br/> genes format can be name or Ensembl ID <br/> (separate by new lines) ")), 
+      print(HTML("<strong>Input gene names</strong> <br/> genes can be in name format, Ensembl ID, or Ensembl version <br/> (separate by new lines) ")), 
       textAreaInput("gene_string", "", rows = 5), 
       
       # Button that triggers PCA computation
@@ -129,12 +129,10 @@ server <- function(input, output) {
     # Formatting function----------#############################################
     gene_list <- strsplit(input$gene_string, split = "\n")[[1]] # Split the user input into a list
     formatting_output <- input_format(gene_list)
-    cancer_names_assigned <- data.frame(gene_id = formatting_output[["formatted_gene_list"]], gene_name = formatting_output[["gene_names_assigned"]])
-    
-    formatted_gene_list <- formatting_output[["formatted_gene_list"]]
+    print(head(formatting_output[["formatted_gene_list"]]))
+    formatted_gene_list <- formatting_output[["formatted_gene_list"]]$gene_id
+    names(formatted_gene_list) <- formatting_output[["formatted_gene_list"]]$merged_name
     print(formatted_gene_list)
-    
-    gene_name_list <- formatting_output[["gene_names_assigned"]]
     
     # PCA function----------####################################################
     output_data <- pca_function(input$cancer_type_list, formatted_gene_list)
@@ -145,12 +143,14 @@ server <- function(input, output) {
     
     # Display plot (interactive)-----
     # UI variable menus (with the first variable as default
+    print("DONE, ABOUT TO MAKE BUTTON")
+    
     output$cancer_type_menu <- renderUI({
       selectInput("display_cancer_type", "Cancer type", input_cancer_type, selected = input_cancer_type[1])
     })
     
     output$gene_menu <- renderUI({
-      selectInput("display_gene_name", "Gene", gene_name_list, selected = formatted_gene_list[1])
+      selectInput("display_gene", "Gene", formatted_gene_list, selected = formatted_gene_list[1])
     })
     
     output$pcx_menu <- renderUI({
@@ -174,25 +174,27 @@ server <- function(input, output) {
       output$pcy_menu <- renderUI({selectInput("display_pcy", "PC (y-axis)", pcy_choices, selected = pcy_choices[1])})
     })
     
-    # PCA plot
+    # PCA plot----------
     output$display_pca_plot <- renderPlotly({
-      display_gene <- cancer_names_assigned[cancer_names_assigned$gene_name == display_gene_name, "gene_id"]##################################################
-      
       validate(need(input$display_cancer_type, input$display_gene, message = FALSE)) # Validate needs
       output_data[["pca plots"]][[input$display_cancer_type]][[input$display_gene]][[paste0(input$display_pcx, "_", input$display_pcy)]]
     }) # Render Plotly
     
-    # Scree plot
+    # Scree plot----------
     output$display_scree_plot <- renderPlotly({
-      display_gene <- cancer_names_assigned[cancer_names_assigned$gene_name == display_gene_name, "gene_id"]##################################################
       
-      validate(need(input$display_cancer_type, message = FALSE)) # Validate needs
+      # Validate needs
+      validate(need(input$display_cancer_type, message = FALSE))
+      
+      # Get data
       screeplot_df <- output_data[["contribution percentile dataframes"]][[input$display_cancer_type]]
+      current_gene_name <- formatting_output[["formatted_gene_list"]][formatting_output[["formatted_gene_list"]]$gene_id == input$display_gene, "gene_name"]
+      
       if(input$display_gene %in% colnames(screeplot_df)){
         current_scree_data <- screeplot_df[,c("PC", "contribution", input$display_gene)]
         colnames(current_scree_data) <- c("PC", "contribution", "current_gene_column") 
         
-        percent_label <- paste0(input$display_gene, "\nContribution\n(%)")
+        percent_label <- paste0(current_gene_name, "\nContribution\n(%)")
         
         scree_plot <- ggplot(data = current_scree_data, mapping = aes(x = PC, y = contribution, fill = current_gene_column)) +
           geom_bar(stat = "identity") +
@@ -200,6 +202,7 @@ server <- function(input, output) {
           scale_x_discrete(limit = c("PC1", "PC2", "PC3", "PC4", "PC5", "PC6", "PC7", "PC8", "PC9", "PC10")) +
           theme_minimal() + 
           scale_fill_viridis(option = "magma")
+        
       } else {
         current_scree_data <- screeplot_df[,c("PC", "contribution")]
         colnames(current_scree_data) <- c("PC", "contribution") 
@@ -214,7 +217,7 @@ server <- function(input, output) {
     }) # Render Plotly
     
     
-    # Download all plots--------------------------------------------------------
+    # Download all plots-------------------------------------------------------------------------------------------
     # Reactive download buttons
     output$download_zip_button <- renderUI(downloadButton("download_zip", "Download All Plot Images"))
     output$download_pdf_button <- renderUI(downloadButton("download_pdf", "Download All Plots as a PDF"))
