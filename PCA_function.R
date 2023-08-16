@@ -142,6 +142,7 @@ pca_function <- function(cancer_type_list, gene_list){
     
     output_data[["contribution percentile dataframes"]][[current_cancer_type]] <- contr_and_per_df
     
+    
     #6 Formatting and looping through gene data-------------------------------------
     for(current_gene in gene_list){
       

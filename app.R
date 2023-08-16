@@ -126,7 +126,7 @@ server <- function(input, output) {
   
   observeEvent(input$button_pca_analysis, {
     
-    # Formatting function----------#############################################
+    # Formatting function----------
     gene_list <- strsplit(input$gene_string, split = "\n")[[1]] # Split the user input into a list
     formatting_output <- input_format(gene_list)
     print(head(formatting_output[["formatted_gene_list"]]))
@@ -134,14 +134,14 @@ server <- function(input, output) {
     names(formatted_gene_list) <- formatting_output[["formatted_gene_list"]]$merged_name
     print(formatted_gene_list)
     
-    # PCA function----------####################################################
+    # PCA function----------
     output_data <- pca_function(input$cancer_type_list, formatted_gene_list)
     
     # Re-assigning names to cancer types
     input_cancer_type <- input$cancer_type_list
     names(input_cancer_type) <- list_of_cancer_types_rev[input_cancer_type]
     
-    # Display plot (interactive)-----
+    # Display plot (interactive)----------
     # UI variable menus (with the first variable as default
     print("DONE, ABOUT TO MAKE BUTTON")
     
@@ -157,10 +157,9 @@ server <- function(input, output) {
       selectInput("display_pcx", "PC (x-axis)", c(1:9), selected = 1)
     })
     
-    # PCy options that are reactive to PCx
-    
+    # Making sure that only valid y inputs are displayed (relative to x)
     observeEvent(input$display_pcx, {
-      
+      ]
       if (input$display_pcx == 1){pcy_choices <- c(2:10)}
       else if (input$display_pcx == 2){pcy_choices <- c(3:10)}
       else if (input$display_pcx == 3){pcy_choices <- c(4:10)}
@@ -174,13 +173,13 @@ server <- function(input, output) {
       output$pcy_menu <- renderUI({selectInput("display_pcy", "PC (y-axis)", pcy_choices, selected = pcy_choices[1])})
     })
     
-    # PCA plot----------
+    # Retrieving PCA plot----------
     output$display_pca_plot <- renderPlotly({
       validate(need(input$display_cancer_type, input$display_gene, message = FALSE)) # Validate needs
       output_data[["pca plots"]][[input$display_cancer_type]][[input$display_gene]][[paste0(input$display_pcx, "_", input$display_pcy)]]
     }) # Render Plotly
     
-    # Scree plot----------
+    # Plotting scree plot----------
     output$display_scree_plot <- renderPlotly({
       
       # Validate needs
@@ -190,6 +189,7 @@ server <- function(input, output) {
       screeplot_df <- output_data[["contribution percentile dataframes"]][[input$display_cancer_type]]
       current_gene_name <- formatting_output[["formatted_gene_list"]][formatting_output[["formatted_gene_list"]]$gene_id == input$display_gene, "gene_name"]
       
+      # Plotting for expressed genes
       if(input$display_gene %in% colnames(screeplot_df)){
         current_scree_data <- screeplot_df[,c("PC", "contribution", input$display_gene)]
         colnames(current_scree_data) <- c("PC", "contribution", "current_gene_column") 
@@ -203,6 +203,7 @@ server <- function(input, output) {
           theme_minimal() + 
           scale_fill_viridis(option = "magma")
         
+      # Plotting for genes with almost no expression
       } else {
         current_scree_data <- screeplot_df[,c("PC", "contribution")]
         colnames(current_scree_data) <- c("PC", "contribution") 
@@ -213,7 +214,6 @@ server <- function(input, output) {
           theme_minimal() + 
           scale_fill_viridis(discrete = TRUE, option = "magma")
       } # Else   
-      
     }) # Render Plotly
     
     
@@ -242,12 +242,12 @@ server <- function(input, output) {
                 ggsave(out_plot_fp,
                        plot = output_data[["pca plots"]][[current_cancer_type]][[current_gene]][[pca_combination]], 
                        width = 8, height = 6
-                )
-              }
-            }        
-          }
+                ) # GGsave
+              } # For
+            } # For        
+          } # For
           all_files <- list.files("out_download", full.names = TRUE)
-        }
+        } # If
         
         zip::zip(zipfile = file, files = all_files)
       }, # Content function
@@ -262,8 +262,8 @@ server <- function(input, output) {
         pdf(file, onefile = TRUE, width = 8, height = 6)
         for(plot_printout in output_data[["pca plots"]]){ print(plot_printout)}
         dev.off()
-      })                      
-    
+      } # Content function
+    ) # Download handler                      
   }) # Observe event
 } # Server
 
