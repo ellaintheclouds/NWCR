@@ -155,15 +155,20 @@ ui <- fluidPage(theme = shinytheme("sandstone"),
                                       
                                       column(width = 4, wellPanel(
                                         HTML("Created by A. Kennedy, E. Richardson and B. Shih. <br/> <br/> 
-                      This tool was created with funding from North West Cancer Research.")
-                                      ) # Well panel
+                      This tool was created with funding from North West Cancer Research."), 
+                                      ), # Well panel
+                                      column(width = 6, br(), 
+                                             img(src='NWCR.png', height="100%", width="100%")), 
+                                      column(width = 6, br(), 
+                                             img(src='LU.png', height="100%", width="100%"))
                                       ), # Column
                                       
                                       column(width = 8, wellPanel(
                                         HTML('<iframe width="560" height="315" src="https://www.youtube.com/embed/Ka2pWqXS1WA" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>')
                                       ) # Well panel
                                       ) # Column
-                                    ) # Fluid row
+                                    ),  # Fluid row
+                                    
                            ), # Tab panel
                            
                            # Contact us-------------------------------------------------------
