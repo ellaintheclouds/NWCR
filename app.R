@@ -1,15 +1,10 @@
-# Set up------------------------------------------------------------------------
+# Set up-------------------------------------------------------------------------
+# Directory----------
 setwd("D:/app versions/tcga_app_usb")
 
-## Loading libraries ##
-#if (!require("BiocManager", quietly = TRUE))
-#  install.packages("BiocManager")
-#BiocManager::install("TCGAbiolinks")
-
-#if (!require("BiocManager", quietly = TRUE))
-#  install.packages("BiocManager")
-#BiocManager::install("edgeR")
-
+# Libraries----------
+if (!require("bslib", quietly = TRUE)) { install.packages("bslib") } 
+if (!require("shinythemes", quietly = TRUE)) { install.packages("shinythemes") } 
 if (!require("ggcorrplot", quietly = TRUE)) { install.packages("ggcorrplot") } 
 if (!require("factoextra", quietly = TRUE)) { install.packages("factoextra") } 
 if (!require("ggfortify", quietly = TRUE)) { install.packages("ggfortify") } 
@@ -17,24 +12,33 @@ if (!require("umap", quietly = TRUE)) { install.packages("umap") }
 if (!require("plotly", quietly = TRUE)) { install.packages("plotly") } 
 if (!require("viridis", quietly = TRUE)) { install.packages("viridis") } 
 if (!require("zip", quietly = TRUE)) { install.packages("zip") } 
+if (!require("edgeR", quietly = TRUE)) { BiocManager::install("edgeR") } 
+if (!require("TCGAbiolinks", quietly = TRUE)) { BiocManager::install("TCGAbiolinks") } 
 
 # General
 library(shiny)
 library(stringr) # Makes working with strings simpler.
 library(viridis) # Colour scheme.
-library(zip) # Allows the creation of a zip file. 
+library(zip) # Allows creation of zip files
+
+# UI
+library(shinythemes)
+library(forcats)
+library(plyr)
+library(shinyWidgets)
 
 # Biological data
 library(TCGAbiolinks) # For integrative analysis of GDC data.
+library(ggplot2)
 library(ggcorrplot) # Allows visulaisation of a correlation matrix using ggplot2.
 library(SummarizedExperiment) # For storing processed data from high-throughput sequencing assays.
 library(edgeR) # Differential expression analysis of RNA-seq expression profiles.
 library(plotly) # Creates interactive, publication-suitable graphs.
 
 # PCA
-library(factoextra) # For principal component analysis.
+library(factoextra) # For principal component analysis
 library(ggfortify) # Allows plotting of PCA and survival analysis.
-library(umap) # Algorithm for dimensional reduction.
+library(umap) # Algorithm for dimensional reduction
 
 # Data----------
 source("PCA_function.R")
@@ -76,55 +80,103 @@ for(current_name in names(list_of_cancer_types)){
 
 
 # UI----------------------------------------------------------------------------
-ui <- fluidPage(
-  
-  titlePanel("TCGA Dummy App"),
-  
-  # Sidebar----------
-  sidebarLayout(
-    sidebarPanel(
-      # Cancer type input
-      checkboxGroupInput("cancer_type_list", "Select Cancer Type", list_of_cancer_types),
-      br(), 
-      
-      # Gene input
-      print(HTML("<strong>Input gene names</strong> <br/> genes can be in name format, Ensembl ID, or Ensembl version <br/> (separate by new lines) ")), 
-      textAreaInput("gene_string", "", rows = 5), 
-      
-      # Button that triggers PCA computation
-      actionButton("button_pca_analysis", "Principal Component Analysis"), 
-      
-    ), # Sidebar panel
-    
-    # Main panel----------
-    mainPanel(
-      # Drop-down menus that reactively alter display PCA plot
-      uiOutput("cancer_type_menu"), 
-      uiOutput("gene_menu"), 
-      uiOutput("pcx_menu"), 
-      uiOutput("pcy_menu"), 
-      
-      # Display PCA plot
-      plotlyOutput("display_pca_plot", width = "100%",
-                   height = "600px"), 
-      
-      # Display scree plot
-      plotlyOutput("display_scree_plot", width = "100%",
-                   height = "600px"),
-      
-      # Download buttons
-      uiOutput("download_pdf_button"), 
-      uiOutput("download_zip_button")
-      
-    ) # Main panel
-  ) # Sidebar layout
+ui <- fluidPage(theme = shinytheme("sandstone"), 
+                
+                # Setting the font for the entire page
+                tags$head(
+                  tags$head(tags$style(HTML('* {font-family: "Calibri"};')))
+                ),
+                
+                navbarPage("TCGA Survival and Principal Component Analysis", 
+                           
+                           # Analysis-------------------------------------------
+                           tabPanel("Analysis", 
+                                    
+                                    sidebarLayout(
+                                      sidebarPanel( width = 3,
+                                                    # Gene input
+                                                    print(HTML("<strong>Input gene names</strong> <br/> format as gene name or Ensembl ID <br/> (separate by new lines) ")), 
+                                                    textAreaInput("gene_string", "", rows = 5), 
+                                                    br(), 
+                                                    
+                                                    # Cancer type input
+                                                    selectInput("cancer_type_list", "Select Cancer Type", list_of_cancer_types, multiple = TRUE),
+                                                    br(), 
+                                                    
+                                                    # Compute button
+                                                    actionButton("button_compute", "Analyse")
+                                                    
+                                      ), # Sidebar panel 
+                                      
+                                      mainPanel(
+                                        tabsetPanel(type = "tabs", 
+                                                    
+                                                    # Principal component analysis-----------------------------------------
+                                                    tabPanel("Principal Component Analysis",
+                                                             
+                                                             fluidRow(
+                                                               # Drop-down menus----------
+                                                               column(width = 3, uiOutput("cancer_type_menu")), 
+                                                               column(width = 3, uiOutput("gene_menu")), 
+                                                               column(width = 3, uiOutput("pcx_menu")), 
+                                                               column(width = 3, uiOutput("pcy_menu"))
+                                                             ), # Fluid row
+                                                             
+                                                             fluidRow(
+                                                               # Display PCA plot----------
+                                                                      plotlyOutput("display_pca_plot", width = "100%", height = "500px")
+                                                             ), # Fluid row
+                                                               
+                                                            fluidRow(
+                                                               # Display scree plot----------
+                                                                      plotlyOutput("display_scree_plot", width = "100%", height = "300px")
+                                                             ), # Fluid row
+                                                             
+                                                             fluidRow(
+                                                               # Download buttons----------
+                                                               column(width = 6, uiOutput("download_pdf_button")), 
+                                                               column(width = 6, uiOutput("download_zip_button"))
+                                                             ) # Fluid row
+                                                    ), # Tab panel
+                                                    
+                                                    # Survival analysis------------------------------
+                                                    tabPanel("Survival Analysis")
+                                        ) # Tabset panel
+                                      ) # Main panel
+                                    ) # Sidebar layout
+                           ), # Tab panel
+
+                           # About----------------------------------------------
+                           tabPanel("About", 
+                                    fluidRow(
+                                      
+                                      column(width = 4, wellPanel(
+                                        HTML("Created by A. Kennedy, E. Richardson and B. Shih. <br/> <br/> 
+                      This tool was created with funding from North West Cancer Research.")
+                                      ) # Well panel
+                                      ), # Column
+                                      
+                                      column(width = 8, wellPanel(
+                                        HTML('<iframe width="560" height="315" src="https://www.youtube.com/embed/Ka2pWqXS1WA" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>')
+                                      ) # Well panel
+                                      ) # Column
+                                    ) # Fluid row
+                           ), # Tab panel
+                           
+                           # Contact us-------------------------------------------------------
+                           tabPanel("Contact us"), 
+                           
+                           # Source code------------------------------------------------------
+                           tabPanel("Source code", 
+                                    HTML('<script src="https://emgithub.com/embed-v2.js?target=https%3A%2F%2Fgithub.com%2Fellaintheclouds%2FNWCR%2Fblob%2Fmain%2FPCA_function.R&style=default&type=code&showBorder=on&showLineNumbers=on&showFileMeta=on&showFullPath=on&showCopy=on"></script>')
+                           )
+                ) # Navbar page
 ) # Fluid page
 
 
 # Server------------------------------------------------------------------------
-server <- function(input, output) {
-  
-  observeEvent(input$button_pca_analysis, {
+server <- function(input, output, session){
+  observeEvent(input$button_compute, {
     
     # Formatting function----------
     gene_list <- strsplit(input$gene_string, split = "\n")[[1]] # Split the user input into a list
@@ -203,7 +255,7 @@ server <- function(input, output) {
           theme_minimal() + 
           scale_fill_viridis(option = "magma")
         
-      # Plotting for genes with almost no expression
+        # Plotting for genes with almost no expression
       } else {
         current_scree_data <- screeplot_df[,c("PC", "contribution")]
         colnames(current_scree_data) <- c("PC", "contribution") 
