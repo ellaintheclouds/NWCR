@@ -101,10 +101,13 @@ ui <- fluidPage(theme = shinytheme("sandstone"),
                                                     
                                                     # Cancer type input
                                                     selectInput("cancer_type_list", "Select Cancer Type", list_of_cancer_types, multiple = TRUE),
-                                                    br(), 
                                                     
                                                     # Compute button
-                                                    actionButton("button_compute", "Analyse")
+                                                    actionButton("button_compute", "Analyse"),
+                                                    br(), 
+                                                    
+                                                    # Reactive error message
+                                                    textOutput("invalid_gene_message_display")
                                                     
                                       ), # Sidebar panel 
                                       
@@ -185,6 +188,16 @@ server <- function(input, output, session){
     formatted_gene_list <- formatting_output[["formatted_gene_list"]]$gene_id
     names(formatted_gene_list) <- formatting_output[["formatted_gene_list"]]$merged_name
     print(formatted_gene_list)
+    
+    invalid_gene_message <- reactive({
+        if (length(formatting_output[["rejected_gene_list"]]) > 0){
+        paste0("These inputs are not valid gene names: ", formatting_output[["rejected_gene_list"]], 
+               ". Make sure that the format, letter case, and line separation is correct.")
+        } # If
+      else {""}
+    }) # Reactive
+    
+    output$invalid_gene_message_display <- renderText({invalid_gene_message()})
     
     # PCA function----------
     output_data <- pca_function(input$cancer_type_list, formatted_gene_list)
