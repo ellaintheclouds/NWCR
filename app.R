@@ -159,7 +159,7 @@ server <- function(input, output) {
     
     # Making sure that only valid y inputs are displayed (relative to x)
     observeEvent(input$display_pcx, {
-      ]
+      
       if (input$display_pcx == 1){pcy_choices <- c(2:10)}
       else if (input$display_pcx == 2){pcy_choices <- c(3:10)}
       else if (input$display_pcx == 3){pcy_choices <- c(4:10)}
