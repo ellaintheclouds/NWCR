@@ -1,5 +1,5 @@
 # 0 Set up----------------------------------------------------------------------
-setwd("D:/app versions/tcga_app_usb")
+setwd("D:/shared/nwcr_survival")
 
 gene_annotation <- read.csv("data/gene_annotation.csv")
 

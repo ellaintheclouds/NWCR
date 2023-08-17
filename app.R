@@ -1,6 +1,6 @@
 # Set up-------------------------------------------------------------------------
 # Directory----------
-setwd("C:/Users/kenned38/finalapp/theapp")
+setwd("D:/shared/nwcr_survival")
 
 # Libraries----------
 if (!require("bslib", quietly = TRUE)) { install.packages("bslib") } 
@@ -114,15 +114,18 @@ ui <- fluidPage(theme = shinytheme("sandstone"),
                                       ), # Sidebar panel 
                                       
                                       mainPanel(
+                                        
+                                        fluidRow(# Drop-down menus----------
+                                                 column(width = 3, uiOutput("cancer_type_menu")), 
+                                                 column(width = 3, uiOutput("gene_menu"))
+                                        ), 
+                                        
                                         tabsetPanel(type = "tabs", 
-                                                    
                                                     # Principal component analysis-----------------------------------------
                                                     tabPanel("Principal Component Analysis",
                                                              
                                                              fluidRow(
                                                                # Drop-down menus----------
-                                                               column(width = 3, uiOutput("cancer_type_menu")), 
-                                                               column(width = 3, uiOutput("gene_menu")), 
                                                                column(width = 3, uiOutput("pcx_menu")), 
                                                                column(width = 3, uiOutput("pcy_menu"))
                                                              ), # Fluid row
@@ -149,7 +152,8 @@ ui <- fluidPage(theme = shinytheme("sandstone"),
                                                     tabPanel("Survival Analysis",
                                                     plotOutput("plot1"),
                                                     
-                                                    downloadButton('export', 'Download Plot')
+                                                    # Download button (reactive)
+                                                    uiOutput("export_button")
                                                     ) # Tab panel
                                         ) # Tabset panel
                                         ##########################################################################################################################
@@ -196,7 +200,8 @@ server <- function(input, output, session){
     
     # Formatting function----------
     gene_list <- strsplit(input$gene_string, split = "\n")[[1]] # Split the user input into a list
-    formatting_output <- input_format(gene_list)
+    gene_list_updated <- gene_list[!gene_list == ""] # Remove "" from gene vector (introduced when user inputs multiple new lines)
+    formatting_output <- input_format(gene_list_updated)
     print(head(formatting_output[["formatted_gene_list"]]))
     formatted_gene_list <- formatting_output[["formatted_gene_list"]]$gene_id
     names(formatted_gene_list) <- formatting_output[["formatted_gene_list"]]$merged_name
@@ -345,8 +350,9 @@ server <- function(input, output, session){
     
     ########################################################################################################
     out_plots <- survival_function(input$cancer_type_list, formatted_gene_list)
-    
+    print(length(out_plots))
     output$plot1 <- renderPlot({
+      validate(need(input$display_cancer_type, input$display_gene, message = FALSE)) # Validate needs
       
       withProgress(message = 'Generating plot', value = 0, {
         # Number of times we'll go through the loop
@@ -361,13 +367,17 @@ server <- function(input, output, session){
         }
       })
       
-      print(out_plots)
+      replayPlot(out_plots[[input$display_cancer_type]][["plots"]][[input$display_gene]])
       
       #max of 200 genes
       #in the brackets it can be gene ID or number
       
     })
     
+    # Download button
+    output$export_button <- renderUI(downloadButton('export', 'Download Plot'))
+    
+    # Download
     vals <- reactiveValues(surplot=NULL)
     
     output$export = downloadHandler(
