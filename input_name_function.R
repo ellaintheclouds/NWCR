@@ -10,9 +10,13 @@ input_format <- function(gene_list){
   idx <- 1
   for (g in gene_list){
     
-    if (g %in% gene_annotation$gene_id | g %in% gene_annotation$gene_id_stable |g %in%  gene_annotation$gene_name){
+    g_upper <- toupper(g)
+    
+    gene_annotation$gene_name_upper <- toupper(gene_annotation$gene_name)
+    
+    if (g_upper %in% gene_annotation$gene_id | g_upper %in% gene_annotation$gene_id_stable |g_upper %in%  gene_annotation$gene_name_upper){
       
-      gene_annotation_relavent <- gene_annotation[gene_annotation$gene_id == g | gene_annotation$gene_id_stable == g | gene_annotation$gene_name ==g, c("gene_id", "gene_name")]
+      gene_annotation_relavent <- gene_annotation[gene_annotation$gene_id == g_upper | gene_annotation$gene_id_stable == g_upper | gene_annotation$gene_name == g_upper, c("gene_id", "gene_name")]
       gene_annotation_relavent$merged_name <- paste0(gene_annotation_relavent$gene_name, ": ", gene_annotation_relavent$gene_id)
       formatting_output[["formatted_gene_list"]][[idx]] <-   gene_annotation_relavent
       
