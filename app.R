@@ -1,6 +1,6 @@
 # Set up-------------------------------------------------------------------------
 # Directory----------
-setwd("D:/app versions/tcga_app_usb")
+setwd("C:/Users/kenned38/finalapp/theapp")
 
 # Libraries----------
 if (!require("bslib", quietly = TRUE)) { install.packages("bslib") } 
@@ -43,6 +43,8 @@ library(umap) # Algorithm for dimensional reduction
 # Data----------
 source("PCA_function.R")
 source("input_name_function.R")
+source("modSurvKM.r")
+source("survivalfunctionfinal.R")
 
 list_of_cancer_types <- c("Acute Myeloid Leukemia" = "TCGA-LAML",                                                                                
                           "Adrenocortical Carcinoma" = "TCGA-ACC",                                                                              
@@ -127,12 +129,12 @@ ui <- fluidPage(theme = shinytheme("sandstone"),
                                                              
                                                              fluidRow(
                                                                # Display PCA plot----------
-                                                                      plotlyOutput("display_pca_plot", width = "100%", height = "500px")
+                                                               plotlyOutput("display_pca_plot", width = "100%", height = "500px")
                                                              ), # Fluid row
-                                                               
-                                                            fluidRow(
+                                                             
+                                                             fluidRow(
                                                                # Display scree plot----------
-                                                                      plotlyOutput("display_scree_plot", width = "100%", height = "300px")
+                                                               plotlyOutput("display_scree_plot", width = "100%", height = "300px")
                                                              ), # Fluid row
                                                              
                                                              fluidRow(
@@ -142,13 +144,19 @@ ui <- fluidPage(theme = shinytheme("sandstone"),
                                                              ) # Fluid row
                                                     ), # Tab panel
                                                     
+                                                    ##############################################################################################################
                                                     # Survival analysis------------------------------
-                                                    tabPanel("Survival Analysis")
+                                                    tabPanel("Survival Analysis",
+                                                    plotOutput("plot1"),
+                                                    
+                                                    downloadButton('export', 'Download Plot')
+                                                    ) # Tab panel
                                         ) # Tabset panel
+                                        ##########################################################################################################################
                                       ) # Main panel
                                     ) # Sidebar layout
                            ), # Tab panel
-
+                           
                            # About----------------------------------------------
                            tabPanel("About", 
                                     fluidRow(
@@ -195,10 +203,10 @@ server <- function(input, output, session){
     print(formatted_gene_list)
     
     invalid_gene_message <- reactive({
-        if (length(formatting_output[["rejected_gene_list"]]) > 0){
+      if (length(formatting_output[["rejected_gene_list"]]) > 0){
         paste0("These inputs are not valid gene names: ", formatting_output[["rejected_gene_list"]], 
                ". Make sure that the format, letter case, and line separation is correct.")
-        } # If
+      } # If
       else {""}
     }) # Reactive
     
@@ -333,7 +341,50 @@ server <- function(input, output, session){
         for(plot_printout in output_data[["pca plots"]]){ print(plot_printout)}
         dev.off()
       } # Content function
-    ) # Download handler                      
+    ) # Download handler 
+    
+    ########################################################################################################
+    out_plots <- survival_function(input$cancer_type_list, formatted_gene_list)
+    
+    output$plot1 <- renderPlot({
+      
+      withProgress(message = 'Generating plot', value = 0, {
+        # Number of times we'll go through the loop
+        n <- 10
+        
+        for (i in 1:n) {
+          # Increment the progress bar, and update the detail text.
+          incProgress(1/n, detail = paste("Generating part", i))
+          
+          # Pause for 0.1 seconds to simulate a long computation.
+          Sys.sleep(0.1)
+        }
+      })
+      
+      print(out_plots)
+      
+      #max of 200 genes
+      #in the brackets it can be gene ID or number
+      
+    })
+    
+    vals <- reactiveValues(surplot=NULL)
+    
+    output$export = downloadHandler(
+      
+      filename = function() {"plots.pdf"},
+      
+      content = function(file) {
+        
+        pdf(file, onefile = TRUE, width = 15, height = 9)
+        
+        print(out_plots)
+        
+        dev.off()
+        
+      })
+    ########################################################################################################
+    
   }) # Observe event
 } # Server
 
