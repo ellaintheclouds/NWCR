@@ -30,7 +30,7 @@
                     "TCGA-SKCM", "TCGA-UCS", "TCGA-STAD")
   
   # These projects possibly have errors. We need to come back to these but will exclude them for now.
-  ignore_project <- c("TCGA-UCEC", "TCGA-BLCA", "TCGA-PAAD", "TCGA-KIRC", "TCGA-KIRP", "TCGA-MESO")
+  ignore_project <- c("TCGA-UCEC", "TCGA-BLCA", "TCGA-PAAD", "TCGA-KIRC", "TCGA-KIRP")
   
   retry_projects <- list()
   less_sample_projects <- list()
